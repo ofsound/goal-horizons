@@ -41,6 +41,8 @@ const emptyGoal = {
   timeOfDay: "",
 };
 
+type FormState = typeof emptyGoal;
+
 export default function GoalForm({goalId, onSaved}: GoalFormProps) {
   const theme = useTheme();
   const goals = useGoalStore((s) => s.goals);
@@ -87,7 +89,7 @@ export default function GoalForm({goalId, onSaved}: GoalFormProps) {
     setShowDelete(false);
   }, [existingGoal, goalId, categories]);
 
-  const handleChange = useCallback((field: string, value: any) => {
+  const handleChange = useCallback(<K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({...prev, [field]: value}));
   }, []);
 

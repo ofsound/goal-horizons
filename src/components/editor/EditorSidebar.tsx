@@ -18,6 +18,8 @@ export default function EditorSidebar() {
   const selectedGoalId = useUIStore((s) => s.selectedGoalId);
   const closeEditor = useUIStore((s) => s.closeEditor);
   const showCategoryManager = useUIStore((s) => s.showCategoryManager);
+  const selectGoal = useUIStore((s) => s.selectGoal);
+  const toggleCategoryManager = useUIStore((s) => s.toggleCategoryManager);
   const exportData = useGoalStore((s) => s.exportData);
   const importGoals = useGoalStore((s) => s.importGoals);
 
@@ -172,12 +174,11 @@ export default function EditorSidebar() {
                 key={t.key}
                 onClick={() => {
                   setTab(t.key);
-                  if (t.key !== "form") useUIStore.getState().selectGoal(null);
-                  const isCatOpen = useUIStore.getState().showCategoryManager;
-                  if (t.key === "categories" && !isCatOpen) {
-                    useUIStore.getState().toggleCategoryManager();
-                  } else if (t.key !== "categories" && isCatOpen) {
-                    useUIStore.getState().toggleCategoryManager();
+                  if (t.key !== "form") selectGoal(null);
+                  if (t.key === "categories" && !showCategoryManager) {
+                    toggleCategoryManager();
+                  } else if (t.key !== "categories" && showCategoryManager) {
+                    toggleCategoryManager();
                   }
                 }}
                 className="editor-tab"

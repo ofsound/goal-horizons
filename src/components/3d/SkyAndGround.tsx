@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {useMemo, useEffect} from "react";
 import * as THREE from "three";
 import {Stars, Sphere} from "@react-three/drei";
 import {useTheme} from "../../hooks/useTheme";
@@ -38,6 +38,11 @@ export default function SkyAndGround() {
       side: THREE.BackSide,
     });
   }, [theme.skyTopColor, theme.skyBottomColor]);
+
+  useEffect(() => {
+    const mat = skyMaterial;
+    return () => mat.dispose();
+  }, [skyMaterial]);
 
   return (
     <group>

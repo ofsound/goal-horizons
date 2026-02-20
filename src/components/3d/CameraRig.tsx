@@ -8,42 +8,19 @@ import {getCameraPosition, getCameraTarget} from "../../utils/globe";
 /**
  * CameraRig: controls camera movement along a rail on the globe surface.
  *
- * - Scroll wheel slides the camera forward/backward on the rail (zoom)
+ * - Scroll zoom is handled by ScrollHandler in Scene
  * - "Look Back" rotates the camera 180° smoothly
  * - All transitions are lerp-smoothed for luxurious feel
  */
 export default function CameraRig() {
-  const {camera, gl} = useThree();
+  const {camera} = useThree();
   const railPosition = useSettingsStore((s) => s.cameraRailPosition);
   const curvature = useSettingsStore((s) => s.curvature);
-  const setCameraRailPosition = useSettingsStore((s) => s.setCameraRailPosition);
   const lookingBack = useUIStore((s) => s.lookingBack);
 
   const targetPosRef = useRef(new THREE.Vector3());
   const targetLookRef = useRef(new THREE.Vector3());
   const currentLookRef = useRef(new THREE.Vector3());
-  const initializedRef = useRef(false);
-
-  // Handle scroll for zoom
-  useFrame(() => {
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY * 0.0008;
-      setCameraRailPosition(railPosition + delta);
-    };
-
-    const canvas = gl.domElement;
-    // We attach and detach each frame — not ideal but simpler than effect in R3F
-    // Actually let's set it up once
-    if (!initializedRef.current) {
-      canvas.addEventListener("wheel", handleWheel, {passive: false});
-      initializedRef.current = true;
-
-      return () => {
-        canvas.removeEventListener("wheel", handleWheel);
-      };
-    }
-  });
 
   // Smooth camera movement
   useFrame((_, delta) => {

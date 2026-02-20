@@ -1,4 +1,4 @@
-import {useRef, useMemo} from "react";
+import {useRef, useMemo, useEffect} from "react";
 import {Billboard, Text} from "@react-three/drei";
 import * as THREE from "three";
 import {addDays, format, startOfDay} from "date-fns";
@@ -129,6 +129,11 @@ export default function Globe() {
     const geo = new THREE.BufferGeometry().setFromPoints(points);
     return geo;
   }, [effectiveRadius, gridOverlayEnabled, isFullyFlat, flatDayLines, curvedLatitudeLines]);
+
+  useEffect(() => {
+    const geo = gridGeometry;
+    return () => geo?.dispose();
+  }, [gridGeometry]);
 
   const gridDayLabels = useMemo(() => {
     if (!gridOverlayEnabled) return [];

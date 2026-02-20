@@ -1,4 +1,4 @@
-import {useMemo, useCallback, useEffect, useRef} from "react";
+import {useMemo, useEffect, useRef} from "react";
 import {Canvas, useFrame, useThree} from "@react-three/fiber";
 import * as THREE from "three";
 import Globe from "./Globe";
@@ -66,7 +66,7 @@ function GoalBillboards() {
 
   const filteredIds = useMemo(() => {
     return new Set(getFilteredGoals().map((g) => g.id));
-  }, [getFilteredGoals]);
+  }, [getFilteredGoals, goals, filters]);
 
   const filterActive = filters.categories.length > 0 || filters.priorities.length > 0 || filters.searchQuery.trim() !== "";
 
@@ -139,10 +139,6 @@ export default function Scene() {
   const fogFactor = useMemo(() => THREE.MathUtils.smoothstep(curvature, 0.55, 1), [curvature]);
   const fogNear = useMemo(() => THREE.MathUtils.lerp(1200, theme.fogNear, fogFactor), [theme.fogNear, fogFactor]);
   const fogFar = useMemo(() => THREE.MathUtils.lerp(2200, theme.fogFar, fogFactor), [theme.fogFar, fogFactor]);
-  const handleCanvasClick = useCallback(() => {
-    // Clicking empty space in the 3D scene could close editor
-    // But we let billboard clicks stopPropagation, so this only fires on empty space
-  }, []);
 
   return (
     <Canvas
@@ -153,8 +149,7 @@ export default function Scene() {
         position: [0, 90, 2],
       }}
       style={{width: "100%", height: "100%"}}
-      gl={{antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0}}
-      onClick={handleCanvasClick}>
+      gl={{antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0}}>
       {/* Fog ramps in as curvature approaches flat mode */}
       {fogFactor > 0.001 && <fog attach="fog" args={[theme.fogColor, fogNear, fogFar]} />}
 

@@ -1,5 +1,5 @@
-import {useRef, useState, useCallback, useMemo} from "react";
-import {useFrame} from "@react-three/fiber";
+import {useRef, useState, useCallback, useMemo, useEffect} from "react";
+import {useFrame, type ThreeEvent} from "@react-three/fiber";
 import {Html, Text, Billboard} from "@react-three/drei";
 import * as THREE from "three";
 import type {Goal, Category} from "../../types/goal";
@@ -77,13 +77,12 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
       const newScale = THREE.MathUtils.lerp(currentScale, targetScale * entranceProgress, delta * 8);
       groupRef.current.scale.setScalar(newScale);
 
-      // Opacity via material traversal
+      // Opacity via material traversal (transparent set once on materials)
       groupRef.current.traverse((child) => {
         if (child instanceof THREE.Mesh && child.material) {
           const mat = child.material as THREE.MeshStandardMaterial;
           if (mat.opacity !== undefined) {
             mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, delta * 5);
-            mat.transparent = true;
           }
         }
       });
@@ -98,16 +97,16 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
   });
 
   const handleClick = useCallback(
-    (e: THREE.Event) => {
-      (e as any).stopPropagation?.();
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
       openEditor(goal.id);
     },
     [goal.id, openEditor],
   );
 
   const handlePointerOver = useCallback(
-    (e: THREE.Event) => {
-      (e as any).stopPropagation?.();
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
       setLocalHover(true);
       setHoveredGoal(goal.id);
       document.body.style.cursor = "pointer";
@@ -120,6 +119,13 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
     setHoveredGoal(null);
     document.body.style.cursor = "default";
   }, [setHoveredGoal]);
+
+  useEffect(
+    () => () => {
+      if (hoveredGoalId === goal.id) document.body.style.cursor = "default";
+    },
+    [hoveredGoalId, goal.id],
+  );
 
   // Don't render if completely invisible
   if (targetOpacity <= 0.01) return null;
