@@ -1,6 +1,7 @@
 import {useMemo, useState} from "react";
 import {useGoalStore} from "../../store/goalStore";
 import {useUIStore} from "../../store/uiStore";
+import {useSettingsStore} from "../../store/settingsStore";
 import {useTheme} from "../../hooks/useTheme";
 import {formatDateWithDay, daysFromToday, relativeLabel} from "../../utils/dates";
 import type {Goal} from "../../types/goal";
@@ -15,6 +16,7 @@ export default function GoalList() {
   const categories = useGoalStore((s) => s.categories);
   const deleteGoal = useGoalStore((s) => s.deleteGoal);
   const openEditor = useUIStore((s) => s.openEditor);
+  const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
   const [search, setSearch] = useState("");
 
   // Filter and sort
@@ -131,10 +133,10 @@ export default function GoalList() {
         )}
 
         {grouped.map(([date, dateGoals]) => {
-          const days = daysFromToday(date);
+          const days = daysFromToday(date, simulatedDaysAhead);
           const isPast = days < 0;
           const isToday = days === 0;
-          const relLabel = relativeLabel(date);
+          const relLabel = relativeLabel(date, simulatedDaysAhead);
           const dateParts = formatDateWithDay(date).split(", ");
           const dayMonth = dateParts[0] ?? "";
           const yearPart = dateParts[1] ?? "";

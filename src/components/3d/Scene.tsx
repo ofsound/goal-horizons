@@ -1,5 +1,5 @@
 import {useMemo, useCallback, useEffect, useRef} from "react";
-import {Canvas, useThree} from "@react-three/fiber";
+import {Canvas, useFrame, useThree} from "@react-three/fiber";
 import * as THREE from "three";
 import Globe from "./Globe";
 import SkyAndGround from "./SkyAndGround";
@@ -8,6 +8,8 @@ import CameraRig from "./CameraRig";
 import {useGoalStore} from "../../store/goalStore";
 import {useSettingsStore} from "../../store/settingsStore";
 import {useTheme} from "../../hooks/useTheme";
+import {dayOffsetToTimelineAngle, getGlobeCenterY, getGlobeRadius} from "../../utils/globe";
+import {railPositionToDayRange} from "../../utils/dates";
 
 /**
  * Scroll handler component — captures wheel events and adjusts rail position.
@@ -93,6 +95,41 @@ function GoalBillboards() {
 }
 
 /**
+ * Rotates the full globe world (surface + grid + goals) as simulated time moves forward.
+ * Rotation is smoothed so slider updates never stutter.
+ */
+function RotatingTimelineWorld() {
+  const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
+  const railPosition = useSettingsStore((s) => s.cameraRailPosition);
+  const curvature = useSettingsStore((s) => s.curvature);
+  const worldRef = useRef<THREE.Group>(null);
+  const globeRadius = getGlobeRadius();
+  const globeCenterY = useMemo(() => getGlobeCenterY(curvature), [curvature]);
+  const pivotY = useMemo(() => {
+    const nearFlatMix = THREE.MathUtils.smoothstep(curvature, 0.82, 1);
+    return THREE.MathUtils.lerp(globeCenterY, globeRadius, nearFlatMix);
+  }, [curvature, globeCenterY, globeRadius]);
+  const maxDaysVisible = useMemo(() => railPositionToDayRange(railPosition), [railPosition]);
+  const targetTilt = useMemo(() => {
+    return dayOffsetToTimelineAngle(simulatedDaysAhead, maxDaysVisible, curvature);
+  }, [simulatedDaysAhead, maxDaysVisible, curvature]);
+
+  useFrame((_, delta) => {
+    if (!worldRef.current) return;
+    worldRef.current.rotation.x = THREE.MathUtils.damp(worldRef.current.rotation.x, targetTilt, 9, delta);
+  });
+
+  return (
+    <group ref={worldRef} position={[0, pivotY, 0]}>
+      <group position={[0, -pivotY, 0]}>
+        <Globe />
+        <GoalBillboards />
+      </group>
+    </group>
+  );
+}
+
+/**
  * Scene — the top-level 3D scene component.
  * Wraps everything in a Canvas with camera, lighting, globe, billboards, and sky.
  */
@@ -100,8 +137,8 @@ export default function Scene() {
   const theme = useTheme();
   const curvature = useSettingsStore((s) => s.curvature);
   const fogFactor = useMemo(() => THREE.MathUtils.smoothstep(curvature, 0.55, 1), [curvature]);
-  const fogNear = useMemo(() => THREE.MathUtils.lerp(4000, theme.fogNear, fogFactor), [theme.fogNear, fogFactor]);
-  const fogFar = useMemo(() => THREE.MathUtils.lerp(7000, theme.fogFar, fogFactor), [theme.fogFar, fogFactor]);
+  const fogNear = useMemo(() => THREE.MathUtils.lerp(1200, theme.fogNear, fogFactor), [theme.fogNear, fogFactor]);
+  const fogFar = useMemo(() => THREE.MathUtils.lerp(2200, theme.fogFar, fogFactor), [theme.fogFar, fogFactor]);
   const handleCanvasClick = useCallback(() => {
     // Clicking empty space in the 3D scene could close editor
     // But we let billboard clicks stopPropagation, so this only fires on empty space
@@ -112,7 +149,7 @@ export default function Scene() {
       camera={{
         fov: 60,
         near: 0.1,
-        far: 25000,
+        far: 8000,
         position: [0, 90, 2],
       }}
       style={{width: "100%", height: "100%"}}
@@ -125,8 +162,7 @@ export default function Scene() {
 
       <Lights />
       <SkyAndGround />
-      <Globe />
-      <GoalBillboards />
+      <RotatingTimelineWorld />
       <CameraRig />
       <ScrollHandler />
     </Canvas>

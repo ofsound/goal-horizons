@@ -43,6 +43,8 @@ export interface AppSettings {
     horizonMode: HorizonMode;
     curvature: number; // 0 = globe, 1 = flat
     gridOverlayEnabled: boolean;
+    gridLabelDensity: number; // 1 = every line, 2 = every 2nd line, etc
+    simulatedDaysAhead: number; // 0 = today, positive values simulate forward days
     controlLayout: ControlLayout;
     cameraRailPosition: number; // 0 = close (week), 1 = far (year)
 }

@@ -6,9 +6,8 @@ import type {Goal, Category} from "../../types/goal";
 import {useTheme} from "../../hooks/useTheme";
 import {useUIStore} from "../../store/uiStore";
 import {useSettingsStore} from "../../store/settingsStore";
-import {daysFromToday, relativeLabel, formatDate} from "../../utils/dates";
+import {daysFromToday, relativeLabel, formatDate, railPositionToDayRange} from "../../utils/dates";
 import {goalToGlobePosition, getGoalOpacity, getPriorityScale} from "../../utils/globe";
-import {railPositionToDayRange} from "../../utils/dates";
 
 interface BillboardSignProps {
   goal: Goal;
@@ -26,16 +25,17 @@ interface BillboardSignProps {
 export default function BillboardSign({goal, category, sameDayIndex, sameDayTotal, filterActive, matchesFilter}: BillboardSignProps) {
   const theme = useTheme();
   const curvature = useSettingsStore((s) => s.curvature);
+  const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
   const railPosition = useSettingsStore((s) => s.cameraRailPosition);
   const openEditor = useUIStore((s) => s.openEditor);
   const hoveredGoalId = useUIStore((s) => s.hoveredGoalId);
   const setHoveredGoal = useUIStore((s) => s.setHoveredGoal);
 
   const groupRef = useRef<THREE.Group>(null);
+  const entranceProgressRef = useRef(0);
   const [localHover, setLocalHover] = useState(false);
-  const [entranceProgress, setEntranceProgress] = useState(0);
 
-  const days = daysFromToday(goal.date);
+  const days = daysFromToday(goal.date, simulatedDaysAhead);
   const maxDays = railPositionToDayRange(railPosition);
   const isPast = days < 0;
 
@@ -65,11 +65,12 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
 
   // Entrance animation + hover effect
   useFrame((_, delta) => {
-    if (entranceProgress < 1) {
-      setEntranceProgress((p) => Math.min(1, p + delta * 1.8));
+    if (entranceProgressRef.current < 1) {
+      entranceProgressRef.current = Math.min(1, entranceProgressRef.current + delta * 1.8);
     }
 
     if (groupRef.current) {
+      const entranceProgress = entranceProgressRef.current;
       // Hover scale
       const targetScale = localHover ? baseScale * priorityScale * 1.08 : baseScale * priorityScale;
       const currentScale = groupRef.current.scale.x;
@@ -156,7 +157,7 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
 
         {/* Date label */}
         <Text position={[0, postHeight + signHeight / 2 - 0.1, 0.1]} fontSize={0.13} color={catColor} anchorX="center" anchorY="middle">
-          {relativeLabel(goal.date)}
+          {relativeLabel(goal.date, simulatedDaysAhead)}
         </Text>
 
         {/* Priority indicator dots */}

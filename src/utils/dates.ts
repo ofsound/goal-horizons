@@ -1,11 +1,11 @@
-import { differenceInDays, format, parseISO, startOfDay, addDays, isToday, isPast, isFuture } from 'date-fns';
+import { differenceInDays, format, parseISO, startOfDay, addDays, isToday } from 'date-fns';
 
 /**
  * Get the number of days between today and a target date.
  * Positive = future, Negative = past.
  */
-export function daysFromToday(dateStr: string): number {
-    const today = startOfDay(new Date());
+export function daysFromToday(dateStr: string, simulatedDaysAhead: number = 0): number {
+    const today = startOfDay(addDays(new Date(), simulatedDaysAhead));
     const target = startOfDay(parseISO(dateStr));
     return differenceInDays(target, today);
 }
@@ -41,15 +41,15 @@ export function isDateToday(dateStr: string): boolean {
 /**
  * Check if a date is in the past.
  */
-export function isDatePast(dateStr: string): boolean {
-    return isPast(startOfDay(parseISO(dateStr))) && !isToday(parseISO(dateStr));
+export function isDatePast(dateStr: string, simulatedDaysAhead: number = 0): boolean {
+    return daysFromToday(dateStr, simulatedDaysAhead) < 0;
 }
 
 /**
  * Check if a date is in the future.
  */
-export function isDateFuture(dateStr: string): boolean {
-    return isFuture(startOfDay(parseISO(dateStr)));
+export function isDateFuture(dateStr: string, simulatedDaysAhead: number = 0): boolean {
+    return daysFromToday(dateStr, simulatedDaysAhead) > 0;
 }
 
 /**
@@ -62,8 +62,8 @@ export function dateFromToday(days: number): string {
 /**
  * Get a human-readable relative label.
  */
-export function relativeLabel(dateStr: string): string {
-    const days = daysFromToday(dateStr);
+export function relativeLabel(dateStr: string, simulatedDaysAhead: number = 0): string {
+    const days = daysFromToday(dateStr, simulatedDaysAhead);
     if (days === 0) return 'Today';
     if (days === 1) return 'Tomorrow';
     if (days === -1) return 'Yesterday';

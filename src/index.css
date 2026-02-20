@@ -410,3 +410,36 @@ html, body, #root {
   width: 14px;
   height: 14px;
 }
+
+/* ─── Time Simulator ───────────────────────── */
+
+.time-sim-slider {
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  width: 26px;
+  height: 220px;
+  background: transparent;
+  cursor: ns-resize;
+}
+
+.time-sim-date-overlay {
+  animation: time-sim-date-blink 380ms ease-out;
+}
+
+@keyframes time-sim-date-blink {
+  0% {
+    opacity: 0.68;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.03);
+    filter: brightness(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}

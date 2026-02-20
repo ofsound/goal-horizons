@@ -7,6 +7,8 @@ const GLOBE_RADIUS = 80;
 const MAX_FUTURE_ANGLE = Math.PI * 0.45; // Forward arc (almost to equator)
 const MAX_PAST_ANGLE = Math.PI * 0.25;   // Backward arc for past goals
 const BILLBOARD_HEIGHT_ABOVE_SURFACE = 1.5;
+const FLAT_RADIUS_MULTIPLIER = 24;
+const FLAT_MIX_START = 0.8;
 
 export const HORIZON_PRESET_CURVATURE: Record<HorizonMode, number> = {
     hard: 0,
@@ -34,11 +36,41 @@ export function getCurvatureRadiusMultiplier(curvature: number): number {
     if (c <= 0.5) {
         return THREE.MathUtils.lerp(1, 2.5, c / 0.5);
     }
-    return THREE.MathUtils.lerp(2.5, 100, (c - 0.5) / 0.5);
+    return THREE.MathUtils.lerp(2.5, FLAT_RADIUS_MULTIPLIER, (c - 0.5) / 0.5);
 }
 
 export function getEffectiveGlobeRadius(curvature: number): number {
     return GLOBE_RADIUS * getCurvatureRadiusMultiplier(curvature);
+}
+
+/**
+ * Convert a forward day offset into a timeline rotation angle.
+ * Uses the same spacing curve as the goal/grid day mapping.
+ */
+export function dayOffsetToTimelineAngle(
+    dayOffset: number,
+    maxDaysVisible: number,
+    curvature: number,
+): number {
+    const days = Math.max(0, dayOffset);
+    const safeMaxDays = Math.max(1, maxDaysVisible);
+    const c = clamp01(curvature);
+    const effectiveRadius = getEffectiveGlobeRadius(c);
+    const angleScale = GLOBE_RADIUS / effectiveRadius;
+    const maxAngle = MAX_FUTURE_ANGLE * angleScale;
+    const normalizedDistance = days / safeMaxDays;
+    return Math.sqrt(normalizedDistance) * maxAngle;
+}
+
+function getFlatMix(curvature: number): number {
+    return THREE.MathUtils.smoothstep(clamp01(curvature), FLAT_MIX_START, 1);
+}
+
+/**
+ * Keep the "today" point anchored while curvature changes.
+ */
+export function getGlobeCenterY(curvature: number): number {
+    return GLOBE_RADIUS - getEffectiveGlobeRadius(curvature);
 }
 
 /**
@@ -60,11 +92,15 @@ export function goalToGlobePosition(
     sameDayTotal: number,
     maxDaysVisible: number,
     curvature: number = 0,
+    simulatedDaysAhead: number = 0,
 ): THREE.Vector3 {
-    const days = daysFromToday(dateStr);
-    const effectiveRadius = getEffectiveGlobeRadius(curvature);
+    const c = clamp01(curvature);
+    const days = daysFromToday(dateStr, simulatedDaysAhead);
+    const effectiveRadius = getEffectiveGlobeRadius(c);
+    const centerY = getGlobeCenterY(c);
     const safeMaxDays = Math.max(1, maxDaysVisible);
     const angleScale = GLOBE_RADIUS / effectiveRadius;
+    const flatMix = getFlatMix(c);
 
     // Theta: angle from north pole. 0 = pole (today), positive = forward
     const maxAngle = (days >= 0 ? MAX_FUTURE_ANGLE : MAX_PAST_ANGLE) * angleScale;
@@ -85,10 +121,18 @@ export function goalToGlobePosition(
     // North pole is at (0, radius, 0)
     const r = effectiveRadius + BILLBOARD_HEIGHT_ABOVE_SURFACE;
     const x = r * Math.sin(signedTheta) * Math.sin(phi);
-    const y = r * Math.cos(signedTheta);
+    const y = centerY + r * Math.cos(signedTheta);
     const z = -r * Math.sin(signedTheta) * Math.cos(phi);
+    const arcDistance = signedTheta * effectiveRadius;
+    const flatX = arcDistance * Math.sin(phi);
+    const flatY = GLOBE_RADIUS + BILLBOARD_HEIGHT_ABOVE_SURFACE;
+    const flatZ = -arcDistance * Math.cos(phi);
 
-    return new THREE.Vector3(x, y, z);
+    return new THREE.Vector3(
+        THREE.MathUtils.lerp(x, flatX, flatMix),
+        THREE.MathUtils.lerp(y, flatY, flatMix),
+        THREE.MathUtils.lerp(z, flatZ, flatMix),
+    );
 }
 
 /**
@@ -105,29 +149,39 @@ export function getGlobeNormal(position: THREE.Vector3): THREE.Vector3 {
  * Actually, the camera is always near the pole but tilted to see further.
  */
 export function getCameraPosition(railPosition: number, curvature: number = 0): THREE.Vector3 {
-    const radius = getEffectiveGlobeRadius(curvature);
     const clampedRail = clamp01(railPosition);
+    const flatMix = getFlatMix(curvature);
     // Camera sits slightly above the pole, tilted forward based on rail
     const hardElevation = 8 + clampedRail * 15;
     const flatElevation = 6 + clampedRail * 10;
-    const elevationAboveSurface = THREE.MathUtils.lerp(hardElevation, flatElevation, clamp01(curvature));
-    return new THREE.Vector3(0, radius + elevationAboveSurface, 2);
+    const elevationAboveSurface = THREE.MathUtils.lerp(hardElevation, flatElevation, flatMix);
+    return new THREE.Vector3(0, GLOBE_RADIUS + elevationAboveSurface, 2);
 }
 
 /**
  * Camera look-at target for a given rail position.
  */
 export function getCameraTarget(railPosition: number, lookingBack: boolean, curvature: number = 0): THREE.Vector3 {
-    const radius = getEffectiveGlobeRadius(curvature);
+    const c = clamp01(curvature);
+    const radius = getEffectiveGlobeRadius(c);
+    const centerY = getGlobeCenterY(c);
+    const flatMix = getFlatMix(c);
     const clampedRail = clamp01(railPosition);
     const baseForwardAngle = 0.15 + clampedRail * 0.35;
     const forwardAngle = baseForwardAngle * (GLOBE_RADIUS / radius);
     const angle = lookingBack ? -forwardAngle : forwardAngle;
 
-    const y = radius * Math.cos(angle);
-    const z = -radius * Math.sin(angle);
+    const curvedY = centerY + radius * Math.cos(angle);
+    const curvedZ = -radius * Math.sin(angle);
+    const flatDistance = baseForwardAngle * GLOBE_RADIUS;
+    const flatY = GLOBE_RADIUS;
+    const flatZ = lookingBack ? flatDistance : -flatDistance;
 
-    return new THREE.Vector3(0, y, z);
+    return new THREE.Vector3(
+        0,
+        THREE.MathUtils.lerp(curvedY, flatY, flatMix),
+        THREE.MathUtils.lerp(curvedZ, flatZ, flatMix),
+    );
 }
 
 /**

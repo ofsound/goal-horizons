@@ -8,6 +8,7 @@ const MODES: {value: HorizonMode; label: string; description: string}[] = [
   {value: "subtle", label: "Gentle Curve", description: "Soft curve, goals stay visible"},
   {value: "fog", label: "Atmospheric", description: "Flat with distance fog"},
 ];
+const DENSITY_OPTIONS = [1, 2, 3] as const;
 
 /**
  * HorizonModePicker — dropdown-style picker for 3 horizon curvature modes.
@@ -17,9 +18,11 @@ export default function HorizonModePicker() {
   const horizonMode = useSettingsStore((s) => s.horizonMode);
   const curvature = useSettingsStore((s) => s.curvature);
   const gridOverlayEnabled = useSettingsStore((s) => s.gridOverlayEnabled);
+  const gridLabelDensity = useSettingsStore((s) => s.gridLabelDensity);
   const setHorizonMode = useSettingsStore((s) => s.setHorizonMode);
   const setCurvature = useSettingsStore((s) => s.setCurvature);
   const setGridOverlayEnabled = useSettingsStore((s) => s.setGridOverlayEnabled);
+  const setGridLabelDensity = useSettingsStore((s) => s.setGridLabelDensity);
 
   const curvaturePercent = Math.round(curvature * 100);
 
@@ -95,6 +98,30 @@ export default function HorizonModePicker() {
           />
         </span>
       </button>
+
+      {gridOverlayEnabled && (
+        <div className="rounded-lg px-2.5 py-2" style={{border: `1px solid ${theme.uiBorder}`, background: "rgba(255,255,255,0.04)"}}>
+          <div className="flex items-center justify-between text-[9px] font-semibold uppercase tracking-wider mb-1.5" style={{color: theme.uiText, opacity: 0.78}}>
+            <span>Date Labels</span>
+            <span>{gridLabelDensity}x</span>
+          </div>
+          <div className="flex rounded-md overflow-hidden" style={{border: `1px solid ${theme.uiBorder}`}}>
+            {DENSITY_OPTIONS.map((density) => (
+              <button
+                key={density}
+                onClick={() => setGridLabelDensity(density)}
+                className="flex-1 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider"
+                style={{
+                  background: gridLabelDensity === density ? theme.uiAccent : "rgba(255,255,255,0.06)",
+                  color: gridLabelDensity === density ? "#fff" : theme.uiText,
+                  opacity: gridLabelDensity === density ? 1 : 0.72,
+                }}>
+                {density}x
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

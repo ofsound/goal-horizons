@@ -1,6 +1,7 @@
 import Scene from "./components/3d/Scene";
 import EditorSidebar from "./components/editor/EditorSidebar";
 import ControlBar from "./components/ui/ControlBar";
+import TimeSimulatorSlider from "./components/ui/TimeSimulatorSlider";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
 
       {/* UI Controls (floating or dock) */}
       <ControlBar />
+      <TimeSimulatorSlider />
 
       {/* Editor Sidebar */}
       <EditorSidebar />
