@@ -43,6 +43,23 @@ export function getEffectiveGlobeRadius(curvature: number): number {
     return GLOBE_RADIUS * getCurvatureRadiusMultiplier(curvature);
 }
 
+const FORWARD_DEPTH = Math.PI * 0.45 * GLOBE_RADIUS;
+
+/**
+ * Convert a forward day offset into a Z translation for the flat timeline.
+ * Used when curvature is high: moves the timeline straight towards the camera
+ * one day at a time, matching the spacing of the flat grid.
+ */
+export function dayOffsetToFlatTimelineTranslation(
+    dayOffset: number,
+    maxDaysVisible: number,
+): number {
+    const days = Math.max(0, dayOffset);
+    const safeMaxDays = Math.max(1, maxDaysVisible);
+    const normalized = days / safeMaxDays;
+    return FORWARD_DEPTH * Math.sqrt(normalized);
+}
+
 /**
  * Convert a forward day offset into a timeline rotation angle.
  * Uses the same spacing curve as the goal/grid day mapping.

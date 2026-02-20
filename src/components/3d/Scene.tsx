@@ -8,7 +8,7 @@ import CameraRig from "./CameraRig";
 import {useGoalStore} from "../../store/goalStore";
 import {useSettingsStore} from "../../store/settingsStore";
 import {useTheme} from "../../hooks/useTheme";
-import {dayOffsetToTimelineAngle, getGlobeCenterY, getGlobeRadius} from "../../utils/globe";
+import {dayOffsetToTimelineAngle, dayOffsetToFlatTimelineTranslation, getGlobeCenterY, getGlobeRadius} from "../../utils/globe";
 import {railPositionToDayRange} from "../../utils/dates";
 
 /**
@@ -94,9 +94,13 @@ function GoalBillboards() {
   );
 }
 
+const FLAT_CURVATURE_THRESHOLD = 0.82;
+
 /**
- * Rotates the full globe world (surface + grid + goals) as simulated time moves forward.
- * Rotation is smoothed so slider updates never stutter.
+ * Moves the full globe world (surface + grid + goals) as simulated time moves forward.
+ * - Curved view: rotates the world (timeline tilts towards camera).
+ * - Flat view: translates the world straight towards the camera, one day at a time.
+ * Both use smooth damping for a realistic feel.
  */
 function RotatingTimelineWorld() {
   const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
@@ -106,17 +110,30 @@ function RotatingTimelineWorld() {
   const globeRadius = getGlobeRadius();
   const globeCenterY = useMemo(() => getGlobeCenterY(curvature), [curvature]);
   const pivotY = useMemo(() => {
-    const nearFlatMix = THREE.MathUtils.smoothstep(curvature, 0.82, 1);
+    const nearFlatMix = THREE.MathUtils.smoothstep(curvature, FLAT_CURVATURE_THRESHOLD, 1);
     return THREE.MathUtils.lerp(globeCenterY, globeRadius, nearFlatMix);
   }, [curvature, globeCenterY, globeRadius]);
   const maxDaysVisible = useMemo(() => railPositionToDayRange(railPosition), [railPosition]);
+  const isFlat = curvature >= 0.999;
+
   const targetTilt = useMemo(() => {
     return dayOffsetToTimelineAngle(simulatedDaysAhead, maxDaysVisible, curvature);
   }, [simulatedDaysAhead, maxDaysVisible, curvature]);
 
+  const targetZ = useMemo(() => {
+    return dayOffsetToFlatTimelineTranslation(simulatedDaysAhead, maxDaysVisible);
+  }, [simulatedDaysAhead, maxDaysVisible]);
+
   useFrame((_, delta) => {
     if (!worldRef.current) return;
-    worldRef.current.rotation.x = THREE.MathUtils.damp(worldRef.current.rotation.x, targetTilt, 9, delta);
+    const dampFactor = 9;
+    if (isFlat) {
+      worldRef.current.rotation.x = THREE.MathUtils.damp(worldRef.current.rotation.x, 0, dampFactor, delta);
+      worldRef.current.position.z = THREE.MathUtils.damp(worldRef.current.position.z, targetZ, dampFactor, delta);
+    } else {
+      worldRef.current.rotation.x = THREE.MathUtils.damp(worldRef.current.rotation.x, targetTilt, dampFactor, delta);
+      worldRef.current.position.z = THREE.MathUtils.damp(worldRef.current.position.z, 0, dampFactor, delta);
+    }
   });
 
   return (

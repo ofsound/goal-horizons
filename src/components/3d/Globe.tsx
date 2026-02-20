@@ -3,10 +3,9 @@ import {Billboard, Text} from "@react-three/drei";
 import * as THREE from "three";
 import {addDays, format, startOfDay} from "date-fns";
 import {useSettingsStore} from "../../store/settingsStore";
-import {useGoalStore} from "../../store/goalStore";
 import {useTheme} from "../../hooks/useTheme";
-import {getEffectiveGlobeRadius, getGlobeCenterY, getGlobeRadius, getGoalOpacity} from "../../utils/globe";
-import {daysFromToday, railPositionToDayRange} from "../../utils/dates";
+import {getEffectiveGlobeRadius, getGlobeCenterY, getGlobeRadius} from "../../utils/globe";
+import {railPositionToDayRange} from "../../utils/dates";
 
 /**
  * Globe mesh — the curved world surface.
@@ -19,7 +18,6 @@ export default function Globe() {
   const gridLabelDensity = useSettingsStore((s) => s.gridLabelDensity);
   const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
   const railPosition = useSettingsStore((s) => s.cameraRailPosition);
-  const goals = useGoalStore((s) => s.goals);
   const theme = useTheme();
   const meshRef = useRef<THREE.Mesh>(null);
   const globeRadius = getGlobeRadius();
@@ -34,47 +32,38 @@ export default function Globe() {
     return new THREE.Color(theme.groundGridColor).lerp(new THREE.Color("#ffffff"), 0.62);
   }, [theme.groundGridColor]);
   const gridLabelColor = useMemo(() => new THREE.Color(theme.groundGridColor).lerp(new THREE.Color("#ffffff"), 0.45), [theme.groundGridColor]);
-  const maxLabeledDay = useMemo(() => {
-    let maxDay = 0;
-    goals.forEach((goal) => {
-      const day = daysFromToday(goal.date, simulatedDaysAhead);
-      if (day < 0) return;
-      if (day > maxDaysVisible) return;
-      if (getGoalOpacity(day, maxDaysVisible, curvature) <= 0.01) return;
-      if (day > maxDay) maxDay = day;
-    });
-    return maxDay;
-  }, [goals, simulatedDaysAhead, maxDaysVisible, curvature]);
   const flatDayLines = useMemo(() => {
     if (!gridOverlayEnabled || !isFullyFlat) return [];
     const safeMaxDays = Math.max(1, maxDaysVisible);
     const lines: {dayOffset: number; z: number}[] = [];
 
-    for (let dayOffset = 0; dayOffset <= maxLabeledDay; dayOffset++) {
+    for (let dayOffset = 0; dayOffset <= maxDaysVisible; dayOffset++) {
       const normalized = dayOffset / safeMaxDays;
       const z = -forwardDepth * Math.sqrt(normalized);
       lines.push({dayOffset, z});
     }
 
     return lines;
-  }, [gridOverlayEnabled, isFullyFlat, maxDaysVisible, maxLabeledDay, forwardDepth]);
-  const curvedLatitudeLines = useMemo(() => {
+  }, [gridOverlayEnabled, isFullyFlat, maxDaysVisible, forwardDepth]);
+  const curvedDayLines = useMemo(() => {
     if (!gridOverlayEnabled || isFullyFlat) return [];
+    const safeMaxDays = Math.max(1, maxDaysVisible);
+    const maxFutureAngle = Math.max(0.0001, Math.PI * 0.45 * (globeRadius / effectiveRadius));
+    const lines: {dayOffset: number; theta: number; ringRadius: number; y: number}[] = [];
 
-    const segments = 72;
-    const lines: {index: number; theta: number; ringRadius: number; y: number}[] = [];
-    for (let i = 1; i <= segments / 2; i++) {
-      const theta = (i / segments) * Math.PI;
+    for (let dayOffset = 0; dayOffset <= maxDaysVisible; dayOffset++) {
+      const normalized = dayOffset / safeMaxDays;
+      const theta = Math.sqrt(normalized) * maxFutureAngle;
       if (theta > Math.PI * 0.55) continue;
       lines.push({
-        index: i,
+        dayOffset,
         theta,
         ringRadius: effectiveRadius * Math.sin(theta),
         y: effectiveRadius * Math.cos(theta),
       });
     }
     return lines;
-  }, [gridOverlayEnabled, isFullyFlat, effectiveRadius]);
+  }, [gridOverlayEnabled, isFullyFlat, maxDaysVisible, effectiveRadius, globeRadius]);
 
   // Create grid geometry for global overlay toggle
   const gridGeometry = useMemo(() => {
@@ -100,8 +89,8 @@ export default function Globe() {
 
     const points: THREE.Vector3[] = [];
 
-    // Latitude lines (rings)
-    curvedLatitudeLines.forEach((line) => {
+    // Latitude lines (rings) — one per day
+    curvedDayLines.forEach((line) => {
       for (let j = 0; j <= 64; j++) {
         const phi1 = (j / 64) * Math.PI * 2;
         const phi2 = ((j + 1) / 64) * Math.PI * 2;
@@ -128,7 +117,7 @@ export default function Globe() {
 
     const geo = new THREE.BufferGeometry().setFromPoints(points);
     return geo;
-  }, [effectiveRadius, gridOverlayEnabled, isFullyFlat, flatDayLines, curvedLatitudeLines]);
+  }, [effectiveRadius, gridOverlayEnabled, isFullyFlat, flatDayLines, curvedDayLines]);
 
   useEffect(() => {
     const geo = gridGeometry;
@@ -151,31 +140,22 @@ export default function Globe() {
       }));
     }
 
-    const labels: {key: string; dayOffset: number; position: [number, number, number]; fontSize: number; opacity: number}[] = [];
-    // Put curved labels on the camera-facing front arc, slightly to the right.
     const labelPhi = -Math.PI / 2 + 0.24;
-    const maxFutureAngleScaled = Math.max(0.0001, Math.PI * 0.45 * (globeRadius / effectiveRadius));
-
-    curvedLatitudeLines.forEach((line) => {
-      if (line.index !== 1 && line.index % gridLabelDensity !== 0) return;
-      const normalized = Math.min(line.theta / maxFutureAngleScaled, 1);
-      const mappedDays = Math.round(normalized * normalized * maxDaysVisible);
-      const dayOffset = Math.min(maxLabeledDay, mappedDays);
-      const x = line.ringRadius * Math.cos(labelPhi);
-      const z = line.ringRadius * Math.sin(labelPhi);
-      const y = globeCenterY + line.y + 0.18;
-
-      labels.push({
-        key: `curve-day-${line.index}`,
-        dayOffset,
-        position: [x + 0.55, y, z],
-        fontSize: 0.58,
-        opacity: 0.44,
+    return curvedDayLines
+      .filter((line) => line.dayOffset === 0 || line.dayOffset % gridLabelDensity === 0)
+      .map((line) => {
+        const x = line.ringRadius * Math.cos(labelPhi);
+        const z = line.ringRadius * Math.sin(labelPhi);
+        const y = globeCenterY + line.y + 0.18;
+        return {
+          key: `curve-day-${line.dayOffset}`,
+          dayOffset: line.dayOffset,
+          position: [x + 0.55, y, z] as [number, number, number],
+          fontSize: 0.58,
+          opacity: 0.44,
+        };
       });
-    });
-
-    return labels;
-  }, [gridOverlayEnabled, isFullyFlat, flatDayLines, globeRadius, curvedLatitudeLines, maxDaysVisible, maxLabeledDay, effectiveRadius, globeCenterY, gridLabelDensity]);
+  }, [gridOverlayEnabled, isFullyFlat, flatDayLines, curvedDayLines, globeCenterY, gridLabelDensity]);
 
   return (
     <group>
