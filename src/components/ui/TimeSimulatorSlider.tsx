@@ -90,17 +90,54 @@ export default function TimeSimulatorSlider() {
 
   return (
     <>
+      {/* ── Date overlay — top right ── */}
       <div
         className="fixed top-5 right-5 z-50 pointer-events-none"
         style={{opacity: 1}}>
         <div
           key={dateBlinkKey}
-          className="time-sim-date-overlay px-3 py-2 rounded-xl"
+          className="time-sim-date-overlay"
           style={{
-            background: "rgba(0,0,0,0.12)",
-            border: `1px solid ${theme.uiBorder}`,
-            backdropFilter: "blur(4px)",
+            background: `linear-gradient(135deg, ${theme.uiAccent}10, ${theme.uiBackground})`,
+            borderLeft: `3px solid ${theme.uiAccent}`,
+            backdropFilter: "blur(20px)",
+            padding: "10px 16px 10px 12px",
+            borderRadius: "0 6px 6px 0",
+            position: "relative",
+            overflow: "hidden",
           }}>
+          {/* ghost watermark behind date */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute"
+            style={{
+              top: "50%",
+              right: "-8px",
+              transform: "translateY(-50%)",
+              fontSize: "80px",
+              fontWeight: 900,
+              letterSpacing: "-0.06em",
+              opacity: 0.04,
+              color: theme.uiText,
+              lineHeight: 1,
+            }}>
+            {simulatedDate.split(",")[0]}
+          </div>
+          {/* Tilted section label */}
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: 800,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: theme.uiText,
+              opacity: 0.45,
+              marginBottom: "5px",
+              transform: "rotate(-1deg)",
+              transformOrigin: "left center",
+            }}>
+            DATE
+          </div>
           <div
             style={{
               fontSize: "44px",
@@ -108,85 +145,211 @@ export default function TimeSimulatorSlider() {
               fontWeight: 900,
               letterSpacing: "-0.03em",
               color: theme.uiText,
-              opacity: 0.72,
+              opacity: 0.82,
+              position: "relative",
             }}>
             {simulatedDate}
           </div>
-          <div
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: theme.uiAccent,
-              opacity: 0.85,
-              marginTop: "4px",
-            }}>
-            +{simulatedDaysAhead} days
-          </div>
+          {simulatedDaysAhead > 0 && (
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: theme.uiAccent,
+                marginTop: "5px",
+                position: "relative",
+              }}>
+              +{simulatedDaysAhead} DAYS
+            </div>
+          )}
         </div>
       </div>
 
+      {/* ── Vertical time slider panel — right side ── */}
       <div
-        className="fixed right-4 top-1/2 -translate-y-1/2 z-40 p-2 rounded-xl shadow-xl"
+        className="fixed right-4 top-1/2 -translate-y-1/2 z-40"
         style={{
-          background: theme.uiBackground,
-          border: `1px solid ${theme.uiBorder}`,
-          backdropFilter: "blur(18px)",
+          background: `linear-gradient(180deg, ${theme.uiAccent}0d, ${theme.uiBackground})`,
+          borderLeft: `3px solid ${theme.uiAccent}`,
+          backdropFilter: "blur(24px)",
+          padding: "14px 10px 14px 12px",
+          minWidth: "72px",
+          overflow: "hidden",
+          boxShadow: "-4px 0 20px rgba(0,0,0,0.12)",
         }}>
-        <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-center mb-2" style={{color: theme.uiText, opacity: 0.75}}>
-          Time Sim
+
+        {/* Ghost watermark */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute"
+          style={{
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%) rotate(-90deg)",
+            fontSize: "52px",
+            fontWeight: 900,
+            letterSpacing: "0.15em",
+            opacity: 0.04,
+            color: theme.uiText,
+            whiteSpace: "nowrap",
+          }}>
+          TIME
         </div>
 
-        <div className="flex flex-col items-center">
+        {/* Section label */}
+        <div
+          style={{
+            fontSize: "8px",
+            fontWeight: 800,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: theme.uiText,
+            opacity: 0.45,
+            textAlign: "center",
+            transform: "rotate(-1.5deg)",
+            transformOrigin: "center",
+            marginBottom: "10px",
+            position: "relative",
+          }}>
+          TIME SIM
+        </div>
+
+        {/* Big offset display */}
+        <div style={{textAlign: "center", marginBottom: "8px", position: "relative"}}>
+          <div
+            style={{
+              fontSize: "26px",
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: "-0.04em",
+              color: theme.uiAccent,
+            }}>
+            +{simulatedDaysAhead}
+          </div>
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: 700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: theme.uiText,
+              opacity: 0.45,
+              marginTop: "2px",
+            }}>
+            days
+          </div>
+        </div>
+
+        {/* Slider */}
+        <div className="flex flex-col items-center" style={{position: "relative"}}>
           <input
             type="range"
             min={0}
             max={maxSimulatedDays}
             step={1}
             value={Math.min(simulatedDaysAhead, maxSimulatedDays)}
-            onChange={(e) => {
-              setSimulatedDaysAhead(Number(e.target.value));
-            }}
+            onChange={(e) => setSimulatedDaysAhead(Number(e.target.value))}
             className="time-sim-slider"
             style={{accentColor: theme.uiAccent}}
             aria-label="Simulate future days"
           />
-
-          <button
-            className="mt-2 px-2 py-1 rounded text-[9px] font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-85"
-            onClick={() => setSimulatedDaysAhead(0)}
-            style={{
-              color: theme.uiText,
-              border: `1px solid ${theme.uiBorder}`,
-              background: "rgba(255,255,255,0.05)",
-            }}>
-            Now
-          </button>
-
-          <button
-            className="mt-1.5 px-2 py-1 rounded text-[9px] font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-85"
-            onClick={toggleAutoPlay}
-            style={{
-              color: isPlaying ? "#ffffff" : theme.uiText,
-              border: `1px solid ${theme.uiBorder}`,
-              background: isPlaying ? theme.uiAccent : "rgba(255,255,255,0.05)",
-            }}>
-            {isPlaying ? "Pause" : "Auto Play"}
-          </button>
         </div>
 
-        <div className="mt-2 text-center">
-          <div className="text-[10px] font-semibold" style={{color: theme.uiText}}>
-            +{simulatedDaysAhead}d
-          </div>
-          <div className="text-[9px] mt-0.5" style={{color: theme.uiText, opacity: 0.7}}>
+        {/* NOW button */}
+        <button
+          onClick={() => setSimulatedDaysAhead(0)}
+          style={{
+            display: "block",
+            width: "100%",
+            padding: "4px 0",
+            marginTop: "8px",
+            fontSize: "8px",
+            fontWeight: 800,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            textAlign: "center",
+            color: simulatedDaysAhead === 0 ? theme.uiAccent : theme.uiText,
+            background: simulatedDaysAhead === 0 ? `${theme.uiAccent}22` : "transparent",
+            border: `1.5px solid ${simulatedDaysAhead === 0 ? theme.uiAccent : theme.uiBorder}`,
+            borderRadius: "3px",
+            cursor: "pointer",
+            opacity: simulatedDaysAhead === 0 ? 1 : 0.6,
+            transition: "all 0.15s ease",
+          }}>
+          NOW
+        </button>
+
+        {/* AUTO PLAY button */}
+        <button
+          onClick={toggleAutoPlay}
+          style={{
+            display: "block",
+            width: "100%",
+            padding: "4px 0",
+            marginTop: "4px",
+            fontSize: "8px",
+            fontWeight: 800,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            textAlign: "center",
+            color: isPlaying ? "#fff" : theme.uiText,
+            background: isPlaying ? theme.uiAccent : "transparent",
+            border: `1.5px solid ${isPlaying ? theme.uiAccent : theme.uiBorder}`,
+            borderRadius: "3px",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}>
+          {isPlaying ? "⏸ PAUSE" : "▶ PLAY"}
+        </button>
+
+        {/* Divider */}
+        <div
+          style={{
+            height: "1px",
+            background: theme.uiBorder,
+            opacity: 0.4,
+            margin: "10px 0 8px",
+          }}
+        />
+
+        {/* Stats */}
+        <div style={{textAlign: "center", position: "relative"}}>
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: 600,
+              color: theme.uiText,
+              opacity: 0.6,
+              lineHeight: 1.6,
+              letterSpacing: "0.02em",
+            }}>
             {simulatedDate}
           </div>
-          <div className="text-[9px] mt-1" style={{color: theme.uiAccent, opacity: 0.85}}>
-            {nextGoalDelta === null ? "No upcoming goals" : nextGoalDelta === 0 ? "Goal today" : `Next goal in ${nextGoalDelta}d`}
+          <div
+            style={{
+              fontSize: "8px",
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              color: theme.uiAccent,
+              marginTop: "4px",
+            }}>
+            {nextGoalDelta === null
+              ? "No upcoming"
+              : nextGoalDelta === 0
+              ? "Goal today"
+              : `Next in ${nextGoalDelta}d`}
           </div>
-          <div className="text-[8px] mt-1" style={{color: theme.uiText, opacity: 0.5}}>
+          <div
+            style={{
+              fontSize: "7px",
+              letterSpacing: "0.06em",
+              color: theme.uiText,
+              opacity: 0.3,
+              marginTop: "3px",
+              fontStyle: isPlaying ? "italic" : "normal",
+            }}>
             {isPlaying ? "Simulating..." : "1 day / 0.85s"}
           </div>
         </div>

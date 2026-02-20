@@ -12,17 +12,25 @@
   --color-space-glow: #a78bfa;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -66,11 +74,13 @@ html, body, #root {
   cursor: pointer;
   background: transparent;
   opacity: 0.35;
-  transition: opacity 0.2s, background 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
 }
 .editor-util-btn:hover {
   opacity: 1;
-  background: rgba(128,128,128,0.12);
+  background: rgba(128, 128, 128, 0.12);
 }
 
 /* Close button */
@@ -84,7 +94,9 @@ html, body, #root {
   font-weight: 700;
   border-radius: 6px;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
 }
 .editor-close-btn:hover {
   opacity: 0.8;
@@ -101,7 +113,9 @@ html, body, #root {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: color 0.2s, opacity 0.2s;
+  transition:
+    color 0.2s,
+    opacity 0.2s;
 }
 .editor-tab:hover {
   opacity: 0.85 !important;
@@ -127,7 +141,9 @@ html, body, #root {
 
 /* Goal card */
 .goal-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .goal-card:hover {
   transform: translateX(3px);
@@ -158,7 +174,9 @@ html, body, #root {
   background: transparent;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
   flex-shrink: 0;
   line-height: 1;
   padding: 0;
@@ -236,7 +254,7 @@ html, body, #root {
   border-radius: 50%;
   background: #fff;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Range slider */
@@ -261,7 +279,7 @@ html, body, #root {
   transition: background 0.15s;
 }
 .ef-subtask:hover {
-  background: rgba(128,128,128,0.06);
+  background: rgba(128, 128, 128, 0.06);
 }
 
 .ef-checkbox {
@@ -284,7 +302,9 @@ html, body, #root {
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: opacity 0.15s, transform 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
   line-height: 1;
 }
 .ef-add-btn:hover {
@@ -317,12 +337,14 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: opacity 0.2s, transform 0.15s;
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
   margin-bottom: 8px;
 }
 .ef-save-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .ef-save-arrow {
@@ -406,9 +428,209 @@ html, body, #root {
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.15s;
   width: 14px;
   height: 14px;
+}
+
+/* ═══════════════════════════════════════════════════
+   CONTROL BAR — editorial design system
+   ═══════════════════════════════════════════════════ */
+
+/* Section label — matches ef-label but for controls */
+.ctrl-section-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.45;
+}
+
+/* ─── Float mode panel wrapper ─── */
+.ctrl-panel {
+  padding: 14px 16px;
+  backdrop-filter: blur(24px);
+  box-shadow:
+    -2px 4px 28px rgba(0, 0, 0, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ─── Theme pill buttons ─── */
+.ctrl-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.ctrl-theme-btn:hover {
+  transform: translateY(-1px);
+  opacity: 1 !important;
+}
+
+/* ─── Horizon mode left-border card buttons ─── */
+.ctrl-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px 7px 10px;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+.ctrl-mode-btn:hover {
+  transform: translateX(2px);
+  opacity: 1 !important;
+}
+
+/* ─── Zoom +/− icon buttons ─── */
+.ctrl-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+  line-height: 1;
+}
+.ctrl-icon-btn:hover {
+  transform: scale(1.12);
+}
+.ctrl-icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* ─── Filter trigger button ─── */
+.ctrl-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ctrl-filter-btn:hover {
+  transform: translateY(-1px);
+  opacity: 1 !important;
+}
+
+/* ─── Filter expanded panel ─── */
+.ctrl-filter-panel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  padding: 16px 16px 14px 16px;
+  min-width: 220px;
+  backdrop-filter: blur(24px);
+  box-shadow: -2px -4px 32px rgba(0, 0, 0, 0.2);
+  border-radius: 0 6px 6px 0;
+  z-index: 100;
+}
+
+/* ─── Action buttons (PAST) ─── */
+.ctrl-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.ctrl-action-btn:hover {
+  opacity: 1 !important;
+  transform: translateY(-1px);
+}
+
+/* ─── Layout toggle button ─── */
+.ctrl-layout-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.ctrl-layout-btn:hover {
+  transform: scale(1.08);
+  opacity: 0.8;
+}
+
+/* ─── Dock mode group ─── */
+.dock-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+}
+.dock-group--center {
+  flex: 1;
+}
+
+/* ─── Dock EDITOR CTA button ─── */
+.dock-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+.dock-editor-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* ─── Float EDITOR CTA button ─── */
+.float-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+.float-editor-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+.float-editor-btn:hover .ef-save-arrow,
+.float-editor-btn:hover span:last-child {
+  transform: translateX(3px);
+}
+
+/* ─── Float control box shadow ─── */
+.float-ctrl-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
 }
 
 /* ─── Time Simulator ───────────────────────── */
@@ -423,23 +645,23 @@ html, body, #root {
 }
 
 .time-sim-date-overlay {
-  animation: time-sim-date-blink 380ms ease-out;
+  animation: time-sim-date-blink 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes time-sim-date-blink {
   0% {
-    opacity: 0.68;
-    transform: scale(1);
+    opacity: 0.6;
+    transform: translateX(4px);
     filter: brightness(1);
   }
-  35% {
+  40% {
     opacity: 1;
-    transform: scale(1.03);
-    filter: brightness(1.18);
+    transform: translateX(-1px);
+    filter: brightness(1.15);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(0);
     filter: brightness(1);
   }
 }

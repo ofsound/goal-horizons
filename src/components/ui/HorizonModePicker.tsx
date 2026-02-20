@@ -3,17 +3,18 @@ import {useTheme} from "../../hooks/useTheme";
 import type {HorizonMode} from "../../types/goal";
 import {curvatureToNearestHorizonMode, horizonModeToCurvature} from "../../utils/globe";
 
-const MODES: {value: HorizonMode; label: string; description: string}[] = [
-  {value: "hard", label: "Hard Edge", description: "Goals vanish over the horizon"},
-  {value: "subtle", label: "Gentle Curve", description: "Soft curve, goals stay visible"},
-  {value: "fog", label: "Atmospheric", description: "Flat with distance fog"},
+const MODES: {value: HorizonMode; label: string; description: string; short: string}[] = [
+  {value: "hard", label: "Hard Edge", short: "HARD", description: "Goals vanish over the horizon"},
+  {value: "subtle", label: "Gentle Curve", short: "CURVE", description: "Soft curve, goals stay visible"},
+  {value: "fog", label: "Atmospheric", short: "FOG", description: "Flat with distance fog"},
 ];
 const DENSITY_OPTIONS = [1, 2, 3] as const;
 
 /**
- * HorizonModePicker — dropdown-style picker for 3 horizon curvature modes.
+ * HorizonModePicker — editorial picker for horizon curvature modes + grid settings.
+ * compact=true = slim 3-button row for dock mode.
  */
-export default function HorizonModePicker() {
+export default function HorizonModePicker({compact}: {compact?: boolean}) {
   const theme = useTheme();
   const horizonMode = useSettingsStore((s) => s.horizonMode);
   const curvature = useSettingsStore((s) => s.curvature);
@@ -35,88 +36,152 @@ export default function HorizonModePicker() {
     const nextCurvature = value / 100;
     const nextMode = curvatureToNearestHorizonMode(nextCurvature);
     setCurvature(nextCurvature);
-    if (nextMode !== horizonMode) {
-      setHorizonMode(nextMode);
-    }
+    if (nextMode !== horizonMode) setHorizonMode(nextMode);
   };
 
+  /* ── Compact / dock mode: horizontal 3-button row only ── */
+  if (compact) {
+    return (
+      <div style={{display: "flex", gap: "4px"}}>
+        {MODES.map((m) => {
+          const isActive = horizonMode === m.value;
+          return (
+            <button
+              key={m.value}
+              onClick={() => handlePresetClick(m.value)}
+              className="ctrl-theme-btn"
+              title={m.description}
+              style={{
+                background: isActive ? theme.uiAccent : "transparent",
+                color: isActive ? "#fff" : theme.uiText,
+                border: `2px solid ${isActive ? theme.uiAccent : theme.uiBorder}`,
+                fontWeight: isActive ? 800 : 500,
+                opacity: isActive ? 1 : 0.5,
+              }}>
+              <span style={{fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase"}}>{m.short}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-2 min-w-[280px]">
-      <div className="flex rounded-lg overflow-hidden" style={{border: `1px solid ${theme.uiBorder}`}}>
-        {MODES.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => handlePresetClick(m.value)}
-            className="flex-1 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-all"
-            style={{
-              background: horizonMode === m.value ? theme.uiAccent : "rgba(255,255,255,0.06)",
-              color: horizonMode === m.value ? "#fff" : theme.uiText,
-              opacity: horizonMode === m.value ? 1 : 0.6,
-            }}
-            title={m.description}>
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="rounded-lg px-2.5 py-2" style={{border: `1px solid ${theme.uiBorder}`, background: "rgba(255,255,255,0.04)"}}>
-        <div className="flex items-center justify-between text-[9px] font-semibold uppercase tracking-wider mb-1.5" style={{color: theme.uiText, opacity: 0.8}}>
-          <span>Curvature</span>
-          <span>{curvaturePercent}%</span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={curvaturePercent}
-          onChange={(e) => handleCurvatureChange(Number(e.target.value))}
-          className="w-full cursor-pointer"
-          style={{accentColor: theme.uiAccent}}
-          aria-label="Curvature morph from globe to flat"
-        />
-      </div>
-
-      <button
-        onClick={() => setGridOverlayEnabled(!gridOverlayEnabled)}
-        className="w-full px-2.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-between"
+    <div style={{display: "flex", flexDirection: "column", gap: "10px", minWidth: "220px"}}>
+      {/* Section label */}
+      <div
+        className="ctrl-section-label"
         style={{
-          background: "rgba(255,255,255,0.06)",
           color: theme.uiText,
-          border: `1px solid ${theme.uiBorder}`,
+          transform: "rotate(-1.5deg)",
+          transformOrigin: "left",
+          display: "inline-block",
         }}>
-        <span>Grid Overlay</span>
-        <span
-          className="relative w-8 h-4 rounded-full transition-colors"
-          style={{
-            background: gridOverlayEnabled ? theme.uiAccent : `${theme.uiText}33`,
-          }}>
+        HORIZON
+      </div>
+
+      {/* Mode buttons as left-border cards */}
+      <div style={{display: "flex", flexDirection: "column", gap: "4px"}}>
+        {MODES.map((m) => {
+          const isActive = horizonMode === m.value;
+          return (
+            <button
+              key={m.value}
+              onClick={() => handlePresetClick(m.value)}
+              className="ctrl-mode-btn"
+              title={m.description}
+              style={{
+                borderLeft: `4px solid ${isActive ? theme.uiAccent : theme.uiBorder}`,
+                background: isActive ? `linear-gradient(to right, ${theme.uiAccent}22, ${theme.uiAccent}08)` : "transparent",
+                color: isActive ? theme.uiAccent : theme.uiText,
+                fontWeight: isActive ? 800 : 500,
+                opacity: isActive ? 1 : 0.5,
+              }}>
+              <span style={{fontSize: "10px", letterSpacing: "0.16em", textTransform: "uppercase"}}>{m.short}</span>
+              <span
+                style={{
+                  fontSize: "9px",
+                  opacity: 0.55,
+                  fontStyle: "italic",
+                  fontWeight: 400,
+                  letterSpacing: "0.02em",
+                  marginLeft: "auto",
+                }}>
+                {m.description}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Curvature control */}
+      <div style={{paddingTop: "4px"}}>
+        <div style={{display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "6px"}}>
+          <span className="ctrl-section-label" style={{color: theme.uiText, transform: "none", display: "inline-block"}}>
+            CURVATURE
+          </span>
           <span
-            className="absolute top-[1px] w-[14px] h-[14px] rounded-full bg-white transition-transform"
             style={{
-              transform: gridOverlayEnabled ? "translateX(17px)" : "translateX(1px)",
+              fontSize: "20px",
+              fontWeight: 900,
+              letterSpacing: "-0.03em",
+              color: theme.uiAccent,
+              lineHeight: 1,
+            }}>
+            {curvaturePercent}
+            <span style={{fontSize: "10px", fontWeight: 500, opacity: 0.6}}>%</span>
+          </span>
+        </div>
+        <div style={{position: "relative", height: "4px", borderRadius: "2px", background: `${theme.uiText}18`}}>
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              height: "100%",
+              borderRadius: "2px",
+              width: `${curvaturePercent}%`,
+              background: theme.uiAccent,
+              transition: "width 0.1s ease",
             }}
           />
-        </span>
-      </button>
+          <input type="range" min={0} max={100} value={curvaturePercent} onChange={(e) => handleCurvatureChange(Number(e.target.value))} className="ef-range-input" style={{accentColor: theme.uiAccent}} aria-label="Curvature morph from globe to flat" />
+        </div>
+      </div>
 
+      {/* Grid Overlay toggle */}
+      <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
+        <span className="ctrl-section-label" style={{color: theme.uiText, transform: "none", display: "inline-block"}}>
+          GRID OVERLAY
+        </span>
+        <label className="ef-toggle" style={{background: gridOverlayEnabled ? theme.uiAccent : theme.uiBorder, cursor: "pointer"}}>
+          <input type="checkbox" checked={gridOverlayEnabled} onChange={() => setGridOverlayEnabled(!gridOverlayEnabled)} className="sr-only" />
+          <span className="ef-toggle-knob" style={{transform: gridOverlayEnabled ? "translateX(16px)" : "translateX(2px)"}} />
+        </label>
+      </div>
+
+      {/* Date label density (only when grid is on) */}
       {gridOverlayEnabled && (
-        <div className="rounded-lg px-2.5 py-2" style={{border: `1px solid ${theme.uiBorder}`, background: "rgba(255,255,255,0.04)"}}>
-          <div className="flex items-center justify-between text-[9px] font-semibold uppercase tracking-wider mb-1.5" style={{color: theme.uiText, opacity: 0.78}}>
-            <span>Date Labels</span>
-            <span>{gridLabelDensity}x</span>
+        <div>
+          <div className="ctrl-section-label" style={{color: theme.uiText, transform: "none", display: "inline-block", marginBottom: "6px"}}>
+            DATE LABELS
           </div>
-          <div className="flex rounded-md overflow-hidden" style={{border: `1px solid ${theme.uiBorder}`}}>
+          <div style={{display: "flex", gap: "5px"}}>
             {DENSITY_OPTIONS.map((density) => (
               <button
                 key={density}
                 onClick={() => setGridLabelDensity(density)}
-                className="flex-1 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider"
+                className="ctrl-theme-btn"
                 style={{
-                  background: gridLabelDensity === density ? theme.uiAccent : "rgba(255,255,255,0.06)",
+                  background: gridLabelDensity === density ? theme.uiAccent : "transparent",
                   color: gridLabelDensity === density ? "#fff" : theme.uiText,
-                  opacity: gridLabelDensity === density ? 1 : 0.72,
+                  border: `2px solid ${gridLabelDensity === density ? theme.uiAccent : theme.uiBorder}`,
+                  fontWeight: gridLabelDensity === density ? 800 : 500,
+                  opacity: gridLabelDensity === density ? 1 : 0.5,
+                  minWidth: "36px",
+                  justifyContent: "center",
                 }}>
-                {density}x
+                <span style={{fontSize: "10px", letterSpacing: "0.1em"}}>{density}x</span>
               </button>
             ))}
           </div>
