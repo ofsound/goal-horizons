@@ -60,13 +60,6 @@ function Lights() {
  */
 function GoalBillboards() {
   const goals = useGoalStore((s) => s.goals);
-  const categories = useGoalStore((s) => s.categories);
-  const filters = useGoalStore((s) => s.filters);
-  const getFilteredGoals = useGoalStore((s) => s.getFilteredGoals);
-
-  const filteredIds = new Set(getFilteredGoals().map((g) => g.id));
-
-  const filterActive = filters.categories.length > 0 || filters.priorities.length > 0 || filters.searchQuery.trim() !== "";
 
   // Group goals by date for same-day indexing
   const goalsByDate = useMemo(() => {
@@ -84,9 +77,8 @@ function GoalBillboards() {
       {goals.map((goal) => {
         const sameDayGoals = goalsByDate.get(goal.date) || [goal];
         const sameDayIndex = sameDayGoals.indexOf(goal);
-        const category = categories.find((c) => c.id === goal.category);
 
-        return <BillboardSign key={goal.id} goal={goal} category={category} sameDayIndex={sameDayIndex} sameDayTotal={sameDayGoals.length} filterActive={filterActive} matchesFilter={filteredIds.has(goal.id)} />;
+        return <BillboardSign key={goal.id} goal={goal} sameDayIndex={sameDayIndex} sameDayTotal={sameDayGoals.length} />;
       })}
     </>
   );

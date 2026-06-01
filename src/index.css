@@ -182,8 +182,7 @@ body,
   padding: 0;
   border-radius: 3px;
 }
-.goal-card:hover .goal-delete-btn,
-.ef-subtask:hover .goal-delete-btn {
+.goal-card:hover .goal-delete-btn {
   opacity: 0.4;
 }
 .goal-delete-btn:hover {
@@ -204,36 +203,6 @@ body,
   letter-spacing: 0.22em;
   text-transform: uppercase;
   opacity: 0.55;
-}
-
-.ef-category-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  font-size: 11px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  letter-spacing: 0.03em;
-}
-.ef-category-pill:hover {
-  transform: translateY(-1px);
-}
-
-.ef-priority-btn {
-  flex: 1;
-  padding: 8px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.ef-priority-btn:hover {
-  transform: translateY(-1px);
 }
 
 /* Toggle switch */
@@ -373,66 +342,6 @@ body,
 }
 .ef-cancel-btn:hover {
   opacity: 0.8 !important;
-}
-
-/* ─── Category Manager ──────────────────────────── */
-
-.ef-cat-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px 10px 12px;
-  border-radius: 0 6px 6px 0;
-  transition: transform 0.15s;
-}
-.ef-cat-row:hover {
-  transform: translateX(2px);
-}
-
-.ef-cat-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px 8px 12px;
-  border-radius: 0 6px 6px 0;
-}
-
-.ef-cat-color-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.ef-cat-action-btn {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
-  padding: 2px 4px;
-}
-.ef-cat-row:hover .ef-cat-action-btn {
-  opacity: 0.5;
-}
-.ef-cat-action-btn:hover {
-  opacity: 1 !important;
-}
-
-.ef-color-dot {
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.15s;
-  width: 14px;
-  height: 14px;
 }
 
 /* ═══════════════════════════════════════════════════

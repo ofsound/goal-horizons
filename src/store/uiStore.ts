@@ -5,7 +5,6 @@ interface UIStore {
     selectedGoalId: string | null;
     hoveredGoalId: string | null;
     lookingBack: boolean;
-    showCategoryManager: boolean;
 
     openEditor: (goalId?: string) => void;
     closeEditor: () => void;
@@ -13,7 +12,6 @@ interface UIStore {
     setHoveredGoal: (id: string | null) => void;
     toggleLookBack: () => void;
     setLookingBack: (v: boolean) => void;
-    toggleCategoryManager: () => void;
 }
 
 export const useUIStore = create<UIStore>()((set) => ({
@@ -21,7 +19,6 @@ export const useUIStore = create<UIStore>()((set) => ({
     selectedGoalId: null,
     hoveredGoalId: null,
     lookingBack: false,
-    showCategoryManager: false,
 
     openEditor: (goalId) =>
         set({ editorOpen: true, selectedGoalId: goalId ?? null }),
@@ -35,7 +32,4 @@ export const useUIStore = create<UIStore>()((set) => ({
 
     toggleLookBack: () => set((s) => ({ lookingBack: !s.lookingBack })),
     setLookingBack: (v) => set({ lookingBack: v }),
-
-    toggleCategoryManager: () =>
-        set((s) => ({ showCategoryManager: !s.showCategoryManager })),
 }));

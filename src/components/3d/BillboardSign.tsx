@@ -2,27 +2,24 @@ import {useRef, useState, useCallback, useMemo, useEffect} from "react";
 import {useFrame, type ThreeEvent} from "@react-three/fiber";
 import {Html, Text, Billboard} from "@react-three/drei";
 import * as THREE from "three";
-import type {Goal, Category} from "../../types/goal";
+import type {Goal} from "../../types/goal";
 import {useTheme} from "../../hooks/useTheme";
 import {useUIStore} from "../../store/uiStore";
 import {useSettingsStore} from "../../store/settingsStore";
 import {daysFromToday, relativeLabel, formatDate, railPositionToDayRange} from "../../utils/dates";
-import {goalToGlobePosition, getGoalOpacity, getPriorityScale} from "../../utils/globe";
+import {goalToGlobePosition, getGoalOpacity} from "../../utils/globe";
 
 interface BillboardSignProps {
   goal: Goal;
-  category: Category | undefined;
   sameDayIndex: number;
   sameDayTotal: number;
-  filterActive: boolean;
-  matchesFilter: boolean;
 }
 
 /**
  * A physical billboard sign planted on the globe surface.
- * Includes: post, sign board, category-colored border, text, hover tooltip.
+ * Includes: post, sign board, text, hover tooltip.
  */
-export default function BillboardSign({goal, category, sameDayIndex, sameDayTotal, filterActive, matchesFilter}: BillboardSignProps) {
+export default function BillboardSign({goal, sameDayIndex, sameDayTotal}: BillboardSignProps) {
   const theme = useTheme();
   const curvature = useSettingsStore((s) => s.curvature);
   const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
@@ -44,24 +41,17 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
     return goalToGlobePosition(goal.date, sameDayIndex, sameDayTotal, maxDays, curvature);
   }, [goal.date, sameDayIndex, sameDayTotal, maxDays, curvature]);
 
-  // Billboard scaling
-  const priorityScale = getPriorityScale(goal.priority);
   const baseScale = 0.8;
 
   // Opacity from horizon mode
   const horizonOpacity = getGoalOpacity(days, maxDays, curvature);
 
-  // Filter opacity
-  const filterOpacity = filterActive ? (matchesFilter ? 1 : 0.08) : 1;
-
   // Past visual treatment
   const pastOpacity = isPast ? 0.45 : 1;
 
   // Combined opacity
-  const targetOpacity = horizonOpacity * filterOpacity * pastOpacity;
-
-  // Category color or fallback
-  const catColor = category?.color ?? "#888888";
+  const targetOpacity = horizonOpacity * pastOpacity;
+  const signColor = theme.uiAccent;
 
   // Entrance animation + hover effect
   useFrame((_, delta) => {
@@ -72,7 +62,7 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
     if (groupRef.current) {
       const entranceProgress = entranceProgressRef.current;
       // Hover scale
-      const targetScale = localHover ? baseScale * priorityScale * 1.08 : baseScale * priorityScale;
+      const targetScale = localHover ? baseScale * 1.08 : baseScale;
       const currentScale = groupRef.current.scale.x;
       const newScale = THREE.MathUtils.lerp(currentScale, targetScale * entranceProgress, delta * 8);
       groupRef.current.scale.setScalar(newScale);
@@ -147,7 +137,7 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
         {/* Sign backing (slightly larger for border effect) */}
         <mesh position={[0, postHeight + signHeight / 2 + 0.1, 0]}>
           <boxGeometry args={[signWidth + 0.15, signHeight + 0.15, 0.06]} />
-          <meshStandardMaterial color={catColor} roughness={0.4} metalness={0.2} emissive={catColor} emissiveIntensity={theme.billboardGlowIntensity * (localHover ? 1.5 : 1)} transparent opacity={targetOpacity} />
+          <meshStandardMaterial color={signColor} roughness={0.4} metalness={0.2} emissive={signColor} emissiveIntensity={theme.billboardGlowIntensity * (localHover ? 1.5 : 1)} transparent opacity={targetOpacity} />
         </mesh>
 
         {/* Sign face */}
@@ -162,40 +152,9 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
         </Text>
 
         {/* Date label */}
-        <Text position={[0, postHeight + signHeight / 2 - 0.1, 0.1]} fontSize={0.13} color={catColor} anchorX="center" anchorY="middle">
+        <Text position={[0, postHeight + signHeight / 2 - 0.1, 0.1]} fontSize={0.13} color={signColor} anchorX="center" anchorY="middle">
           {relativeLabel(goal.date, simulatedDaysAhead)}
         </Text>
-
-        {/* Priority indicator dots */}
-        {goal.priority === "high" && (
-          <mesh position={[signWidth / 2 - 0.2, postHeight + signHeight + 0.0, 0.08]}>
-            <sphereGeometry args={[0.08, 8, 8]} />
-            <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} transparent opacity={targetOpacity} />
-          </mesh>
-        )}
-
-        {/* Progress bar */}
-        {goal.progressPercent > 0 && (
-          <group position={[-signWidth / 2 + 0.15, postHeight + signHeight / 2 - 0.45, 0.1]}>
-            {/* Background */}
-            <mesh>
-              <boxGeometry args={[signWidth - 0.3, 0.08, 0.01]} />
-              <meshBasicMaterial color="#333344" transparent opacity={targetOpacity * 0.6} />
-            </mesh>
-            {/* Fill */}
-            <mesh position={[(-(signWidth - 0.3) * (1 - goal.progressPercent / 100)) / 2, 0, 0.01]}>
-              <boxGeometry args={[((signWidth - 0.3) * goal.progressPercent) / 100, 0.08, 0.01]} />
-              <meshBasicMaterial color={catColor} transparent opacity={targetOpacity} />
-            </mesh>
-          </group>
-        )}
-
-        {/* Past goal stamp */}
-        {isPast && goal.progressPercent === 100 && (
-          <Text position={[0, postHeight + signHeight / 2 + 0.1, 0.12]} fontSize={0.35} color="#22c55e" anchorX="center" anchorY="middle" rotation={[0, 0, -0.2]}>
-            ✓ DONE
-          </Text>
-        )}
       </Billboard>
 
       {/* Hover tooltip using Html */}
@@ -210,28 +169,8 @@ export default function BillboardSign({goal, category, sameDayIndex, sameDayTota
             }}>
             <div className="font-semibold text-sm truncate">{goal.title}</div>
             <div className="text-xs mt-1 opacity-70">{formatDate(goal.date)}</div>
-            {goal.timeOfDay && <div className="text-xs opacity-70">at {goal.timeOfDay}</div>}
-            {category && (
-              <div className="flex items-center gap-1.5 mt-1">
-                <div className="w-2 h-2 rounded-full" style={{backgroundColor: category.color}} />
-                <span className="text-xs">{category.name}</span>
-              </div>
-            )}
-            {goal.progressPercent > 0 && (
-              <div className="mt-1.5">
-                <div className="text-xs opacity-70 mb-0.5">Progress: {goal.progressPercent}%</div>
-                <div className="w-full h-1 rounded-full bg-black/20">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${goal.progressPercent}%`,
-                      backgroundColor: catColor,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
             {goal.description && <div className="text-xs mt-1 opacity-60 line-clamp-2">{goal.description}</div>}
+            {goal.notes && <div className="text-xs mt-1 opacity-60 line-clamp-2">{goal.notes}</div>}
           </div>
         </Html>
       )}

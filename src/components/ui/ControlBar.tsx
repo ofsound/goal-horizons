@@ -1,7 +1,6 @@
 import ZoomControls from "./ZoomControls";
 import ThemePicker from "./ThemePicker";
 import HorizonModePicker from "./HorizonModePicker";
-import FilterPanel from "./FilterPanel";
 import {useSettingsStore} from "../../store/settingsStore";
 import {useUIStore} from "../../store/uiStore";
 import {useTheme} from "../../hooks/useTheme";
@@ -53,10 +52,6 @@ export default function ControlBar() {
           {/* Left: navigate group */}
           <div className="dock-group" style={{borderRight: `1px solid ${theme.uiBorder}`}}>
             <ZoomControls compact />
-          </div>
-
-          <div className="dock-group" style={{borderRight: `1px solid ${theme.uiBorder}`}}>
-            <FilterPanel compact />
           </div>
 
           {/* Center: scene group */}
@@ -141,7 +136,7 @@ export default function ControlBar() {
         </div>
       </div>
 
-      {/* Bottom-left: Navigation controls (Zoom + Filter) */}
+      {/* Bottom-left: Navigation controls */}
       <div className="fixed bottom-4 left-4 z-40" style={{display: "flex", alignItems: "flex-end", gap: "6px"}}>
         <div
           className="ctrl-panel"
@@ -151,15 +146,6 @@ export default function ControlBar() {
             color: theme.uiText,
           }}>
           <ZoomControls />
-        </div>
-        <div
-          className="ctrl-panel"
-          style={{
-            background: `linear-gradient(135deg, ${theme.uiAccent}08, ${theme.uiBackground})`,
-            borderLeft: `3px solid ${theme.uiAccent}55`,
-            color: theme.uiText,
-          }}>
-          <FilterPanel />
         </div>
       </div>
 

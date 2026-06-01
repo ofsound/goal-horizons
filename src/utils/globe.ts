@@ -257,14 +257,3 @@ export function getGoalOpacity(
     }
     return THREE.MathUtils.lerp(subtleOpacity, fogOpacity, (c - 0.5) / 0.5);
 }
-
-/**
- * Get billboard scale based on priority.
- */
-export function getPriorityScale(priority: 'low' | 'medium' | 'high'): number {
-    switch (priority) {
-        case 'low': return 1.0;
-        case 'medium': return 1.4;
-        case 'high': return 1.8;
-    }
-}

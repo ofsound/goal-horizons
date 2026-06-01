@@ -13,7 +13,6 @@ import type {Goal} from "../../types/goal";
 export default function GoalList() {
   const theme = useTheme();
   const goals = useGoalStore((s) => s.goals);
-  const categories = useGoalStore((s) => s.categories);
   const deleteGoal = useGoalStore((s) => s.deleteGoal);
   const openEditor = useUIStore((s) => s.openEditor);
   const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
@@ -24,7 +23,7 @@ export default function GoalList() {
     let filtered = goals;
     if (search.trim()) {
       const q = search.toLowerCase();
-      filtered = goals.filter((g) => g.title.toLowerCase().includes(q) || g.description.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q)));
+      filtered = goals.filter((goal) => goal.title.toLowerCase().includes(q) || goal.description.toLowerCase().includes(q) || goal.notes.toLowerCase().includes(q));
     }
     return [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [goals, search]);
@@ -39,22 +38,6 @@ export default function GoalList() {
     });
     return Array.from(map.entries());
   }, [sortedGoals]);
-
-  const getCategoryColor = (catId: string) => categories.find((c) => c.id === catId)?.color ?? "#888";
-  const getCategoryName = (catId: string) => categories.find((c) => c.id === catId)?.name ?? "Uncategorized";
-
-  const priorityIcon = (p: string) => {
-    switch (p) {
-      case "high":
-        return "🔴";
-      case "medium":
-        return "🟡";
-      case "low":
-        return "🟢";
-      default:
-        return "";
-    }
-  };
 
   return (
     <div>
@@ -207,18 +190,14 @@ export default function GoalList() {
               {/* Goal Cards */}
               <div style={{display: "flex", flexDirection: "column", gap: "6px"}}>
                 {dateGoals.map((goal) => {
-                  const catColor = getCategoryColor(goal.category);
-                  const catName = getCategoryName(goal.category);
-                  const prio = goal.priority;
-
                   return (
                     <div
                       key={goal.id}
                       className="goal-card group"
                       onClick={() => openEditor(goal.id)}
                       style={{
-                        borderLeft: `4px solid ${catColor}`,
-                        background: `linear-gradient(to right, ${catColor}0d, transparent 60%)`,
+                        borderLeft: `4px solid ${theme.uiAccent}`,
+                        background: `linear-gradient(to right, ${theme.uiAccent}0d, transparent 60%)`,
                         cursor: "pointer",
                         padding: "10px 10px 10px 12px",
                         borderRadius: "0 6px 6px 0",
@@ -238,7 +217,6 @@ export default function GoalList() {
                           {goal.title}
                         </span>
                         <div className="flex items-center gap-1 shrink-0">
-                          <span style={{fontSize: "12px"}}>{priorityIcon(prio)}</span>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -254,55 +232,9 @@ export default function GoalList() {
 
                       {/* Meta row */}
                       <div className="flex items-center flex-wrap mt-1" style={{gap: "6px"}}>
-                        <span
-                          className="goal-meta-chip"
-                          style={{
-                            background: catColor + "25",
-                            color: catColor,
-                            fontWeight: 700,
-                          }}>
-                          {catName}
-                        </span>
-                        {goal.timeOfDay && (
-                          <span className="goal-meta-chip" style={{background: "transparent", color: theme.uiText, opacity: 0.45}}>
-                            {goal.timeOfDay}
-                          </span>
-                        )}
-                        {goal.progressPercent > 0 && (
-                          <span className="goal-meta-chip" style={{background: "transparent", color: theme.uiText, opacity: 0.45}}>
-                            {goal.progressPercent}%
-                          </span>
-                        )}
-                        {goal.subTasks.length > 0 && (
-                          <span className="goal-meta-chip" style={{background: "transparent", color: theme.uiText, opacity: 0.45}}>
-                            {goal.subTasks.filter((st) => st.done).length}/{goal.subTasks.length} tasks
-                          </span>
-                        )}
-                        {goal.tags.slice(0, 2).map((tag, i) => (
-                          <span key={i} className="goal-meta-chip" style={{background: "transparent", color: theme.uiAccent, opacity: 0.6}}>
-                            #{tag}
-                          </span>
-                        ))}
+                        {goal.description && <span className="goal-meta-chip" style={{background: "transparent", color: theme.uiText, opacity: 0.45}}>Description</span>}
+                        {goal.notes && <span className="goal-meta-chip" style={{background: "transparent", color: theme.uiText, opacity: 0.45}}>Notes</span>}
                       </div>
-
-                      {/* Progress bar (if > 0) */}
-                      {goal.progressPercent > 0 && (
-                        <div
-                          className="mt-2 rounded-full overflow-hidden"
-                          style={{
-                            height: "2px",
-                            background: `${theme.uiText}18`,
-                          }}>
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${goal.progressPercent}%`,
-                              background: catColor,
-                              transition: "width 0.4s ease",
-                            }}
-                          />
-                        </div>
-                      )}
                     </div>
                   );
                 })}

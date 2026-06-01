@@ -1,6 +1,6 @@
 # Goal Horizons
 
-Goal Horizons is a React + Three.js goal planner that places goals on a visual time horizon. The app combines a 3D timeline scene with floating controls, a goal editor, category management, filters, simulated time controls, and local backup import/export.
+Goal Horizons is a React + Three.js goal planner that places goals on a visual time horizon. The app combines a 3D timeline scene with floating controls, a focused goal editor, simulated time controls, and local backup import/export.
 
 ## Tech Stack
 
@@ -64,8 +64,8 @@ npm run test:watch
 src/
   components/
     3d/       Three.js scene, globe, billboards, camera behavior
-    editor/   Goal editor, list, category manager
-    ui/       Floating controls, filters, theme and time controls
+    editor/   Goal editor and list
+    ui/       Floating controls, theme and time controls
   hooks/      Shared React hooks
   store/      Zustand stores for goals, settings, and UI state
   themes/     Theme configuration used by UI and 3D materials
@@ -77,7 +77,7 @@ src/
 
 The app uses three Zustand stores:
 
-- `goalStore`: goals, categories, filters, import/export helpers
+- `goalStore`: goals and import/export helpers
 - `settingsStore`: theme, horizon mode, curvature, grid, time simulation, camera rail
 - `uiStore`: editor selection, hover state, and transient UI toggles
 
@@ -91,7 +91,6 @@ Backup imports are validated before they are accepted. The expected backup shape
 ```ts
 {
   goals: Goal[];
-  categories: Category[];
 }
 ```
 

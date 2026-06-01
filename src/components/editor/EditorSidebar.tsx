@@ -1,33 +1,29 @@
 import {useState} from "react";
 import GoalForm from "./GoalForm";
 import GoalList from "./GoalList";
-import CategoryManager from "./CategoryManager";
 import {useUIStore} from "../../store/uiStore";
 import {useGoalStore} from "../../store/goalStore";
 import {useTheme} from "../../hooks/useTheme";
 import {parseGoalBackupJson} from "../../utils/goalImport";
 
-type Tab = "form" | "list" | "categories";
+type Tab = "form" | "list";
 
 /**
- * EditorSidebar — slides in from the right, contains tabs for
- * goal form, goal list, and category manager.
+ * EditorSidebar — slides in from the right with goal list and form tabs.
  */
 export default function EditorSidebar() {
   const theme = useTheme();
   const editorOpen = useUIStore((s) => s.editorOpen);
   const selectedGoalId = useUIStore((s) => s.selectedGoalId);
   const closeEditor = useUIStore((s) => s.closeEditor);
-  const showCategoryManager = useUIStore((s) => s.showCategoryManager);
   const selectGoal = useUIStore((s) => s.selectGoal);
-  const toggleCategoryManager = useUIStore((s) => s.toggleCategoryManager);
   const exportData = useGoalStore((s) => s.exportData);
   const importGoals = useGoalStore((s) => s.importGoals);
 
   const [tab, setTab] = useState<Tab>(selectedGoalId ? "form" : "list");
 
   // Switch to form tab when a goal is selected
-  const effectiveTab = selectedGoalId ? "form" : showCategoryManager ? "categories" : tab;
+  const effectiveTab = selectedGoalId ? "form" : tab;
 
   const handleExport = () => {
     const data = exportData();
@@ -65,7 +61,6 @@ export default function EditorSidebar() {
   const tabDefs: {key: Tab; label: string; shortLabel: string}[] = [
     {key: "list", label: "Goals", shortLabel: "GOALS"},
     {key: "form", label: selectedGoalId ? "Edit Goal" : "New Goal", shortLabel: selectedGoalId ? "EDIT" : "NEW"},
-    {key: "categories", label: "Categories", shortLabel: "CATS"},
   ];
 
   return (
@@ -174,11 +169,6 @@ export default function EditorSidebar() {
                 onClick={() => {
                   setTab(t.key);
                   if (t.key !== "form") selectGoal(null);
-                  if (t.key === "categories" && !showCategoryManager) {
-                    toggleCategoryManager();
-                  } else if (t.key !== "categories" && showCategoryManager) {
-                    toggleCategoryManager();
-                  }
                 }}
                 className="editor-tab"
                 style={{
@@ -198,7 +188,6 @@ export default function EditorSidebar() {
       <div className="flex-1 overflow-y-auto sidebar-scroll" style={{padding: "24px 20px"}}>
         {effectiveTab === "form" && <GoalForm key={selectedGoalId ?? "new"} goalId={selectedGoalId} />}
         {effectiveTab === "list" && <GoalList />}
-        {effectiveTab === "categories" && <CategoryManager />}
       </div>
     </div>
   );
