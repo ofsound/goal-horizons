@@ -5,6 +5,7 @@ import CategoryManager from "./CategoryManager";
 import {useUIStore} from "../../store/uiStore";
 import {useGoalStore} from "../../store/goalStore";
 import {useTheme} from "../../hooks/useTheme";
+import {parseGoalBackupJson} from "../../utils/goalImport";
 
 type Tab = "form" | "list" | "categories";
 
@@ -49,10 +50,8 @@ export default function EditorSidebar() {
         const reader = new FileReader();
         reader.onload = (ev) => {
           try {
-            const data = JSON.parse(ev.target?.result as string);
-            if (data.goals && data.categories) {
-              importGoals(data);
-            }
+            const data = parseGoalBackupJson(String(ev.target?.result ?? ""));
+            importGoals(data);
           } catch {
             alert("Invalid file format");
           }
@@ -197,7 +196,7 @@ export default function EditorSidebar() {
 
       {/* ── CONTENT ────────────────────────────── */}
       <div className="flex-1 overflow-y-auto sidebar-scroll" style={{padding: "24px 20px"}}>
-        {effectiveTab === "form" && <GoalForm goalId={selectedGoalId} />}
+        {effectiveTab === "form" && <GoalForm key={selectedGoalId ?? "new"} goalId={selectedGoalId} />}
         {effectiveTab === "list" && <GoalList />}
         {effectiveTab === "categories" && <CategoryManager />}
       </div>

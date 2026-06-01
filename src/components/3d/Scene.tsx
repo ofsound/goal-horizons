@@ -64,9 +64,7 @@ function GoalBillboards() {
   const filters = useGoalStore((s) => s.filters);
   const getFilteredGoals = useGoalStore((s) => s.getFilteredGoals);
 
-  const filteredIds = useMemo(() => {
-    return new Set(getFilteredGoals().map((g) => g.id));
-  }, [getFilteredGoals, goals, filters]);
+  const filteredIds = new Set(getFilteredGoals().map((g) => g.id));
 
   const filterActive = filters.categories.length > 0 || filters.priorities.length > 0 || filters.searchQuery.trim() !== "";
 

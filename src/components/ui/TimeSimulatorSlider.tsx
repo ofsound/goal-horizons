@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {addDays, differenceInCalendarDays, format, parseISO, startOfDay} from "date-fns";
 import {useGoalStore} from "../../store/goalStore";
 import {useSettingsStore} from "../../store/settingsStore";
@@ -15,8 +15,6 @@ export default function TimeSimulatorSlider() {
   const simulatedDaysAhead = useSettingsStore((s) => s.simulatedDaysAhead);
   const setSimulatedDaysAhead = useSettingsStore((s) => s.setSimulatedDaysAhead);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [dateBlinkKey, setDateBlinkKey] = useState(0);
-  const didMountRef = useRef(false);
 
   const maxSimulatedDays = useMemo(() => {
     const now = startOfDay(new Date());
@@ -36,10 +34,6 @@ export default function TimeSimulatorSlider() {
 
   useEffect(() => {
     if (!isPlaying) return;
-    if (simulatedDaysAhead >= maxSimulatedDays) {
-      setIsPlaying(false);
-      return;
-    }
 
     const timer = window.setInterval(() => {
       const current = useSettingsStore.getState().simulatedDaysAhead;
@@ -52,7 +46,7 @@ export default function TimeSimulatorSlider() {
     }, 850);
 
     return () => window.clearInterval(timer);
-  }, [isPlaying, simulatedDaysAhead, maxSimulatedDays]);
+  }, [isPlaying, maxSimulatedDays]);
 
   const simulatedDate = useMemo(() => {
     return format(addDays(startOfDay(new Date()), simulatedDaysAhead), "MMM d, yyyy");
@@ -80,22 +74,12 @@ export default function TimeSimulatorSlider() {
     setIsPlaying(true);
   };
 
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-    setDateBlinkKey((k) => k + 1);
-  }, [simulatedDaysAhead]);
-
   return (
     <>
       {/* ── Date overlay — top right ── */}
-      <div
-        className="fixed top-5 right-5 z-50 pointer-events-none"
-        style={{opacity: 1}}>
+      <div className="fixed top-5 right-5 z-50 pointer-events-none" style={{opacity: 1}}>
         <div
-          key={dateBlinkKey}
+          key={simulatedDaysAhead}
           className="time-sim-date-overlay"
           style={{
             background: `linear-gradient(135deg, ${theme.uiAccent}10, ${theme.uiBackground})`,
@@ -179,7 +163,6 @@ export default function TimeSimulatorSlider() {
           overflow: "hidden",
           boxShadow: "-4px 0 20px rgba(0,0,0,0.12)",
         }}>
-
         {/* Ghost watermark */}
         <div
           aria-hidden="true"
@@ -244,17 +227,7 @@ export default function TimeSimulatorSlider() {
 
         {/* Slider */}
         <div className="flex flex-col items-center" style={{position: "relative"}}>
-          <input
-            type="range"
-            min={0}
-            max={maxSimulatedDays}
-            step={1}
-            value={Math.min(simulatedDaysAhead, maxSimulatedDays)}
-            onChange={(e) => setSimulatedDaysAhead(Number(e.target.value))}
-            className="time-sim-slider"
-            style={{accentColor: theme.uiAccent}}
-            aria-label="Simulate future days"
-          />
+          <input type="range" min={0} max={maxSimulatedDays} step={1} value={Math.min(simulatedDaysAhead, maxSimulatedDays)} onChange={(e) => setSimulatedDaysAhead(Number(e.target.value))} className="time-sim-slider" style={{accentColor: theme.uiAccent}} aria-label="Simulate future days" />
         </div>
 
         {/* NOW button */}
@@ -335,11 +308,7 @@ export default function TimeSimulatorSlider() {
               color: theme.uiAccent,
               marginTop: "4px",
             }}>
-            {nextGoalDelta === null
-              ? "No upcoming"
-              : nextGoalDelta === 0
-              ? "Goal today"
-              : `Next in ${nextGoalDelta}d`}
+            {nextGoalDelta === null ? "No upcoming" : nextGoalDelta === 0 ? "Goal today" : `Next in ${nextGoalDelta}d`}
           </div>
           <div
             style={{

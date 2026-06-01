@@ -1,73 +1,102 @@
-# React + TypeScript + Vite
+# Goal Horizons
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Goal Horizons is a React + Three.js goal planner that places goals on a visual time horizon. The app combines a 3D timeline scene with floating controls, a goal editor, category management, filters, simulated time controls, and local backup import/export.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19 with TypeScript
+- Vite 7
+- Tailwind CSS 4
+- Three.js with React Three Fiber and Drei
+- Zustand for local app state and persisted settings/goals
+- date-fns for date math
+- Vitest + jsdom for unit tests
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Install dependencies:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Start the local dev server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm run dev
 ```
+
+Build for production:
+
+```sh
+npm run build
+```
+
+Preview a production build:
+
+```sh
+npm run preview
+```
+
+## Quality Checks
+
+Run lint:
+
+```sh
+npm run lint
+```
+
+Run tests:
+
+```sh
+npm test
+```
+
+Watch tests while developing:
+
+```sh
+npm run test:watch
+```
+
+## Project Structure
+
+```text
+src/
+  components/
+    3d/       Three.js scene, globe, billboards, camera behavior
+    editor/   Goal editor, list, category manager
+    ui/       Floating controls, filters, theme and time controls
+  hooks/      Shared React hooks
+  store/      Zustand stores for goals, settings, and UI state
+  themes/     Theme configuration used by UI and 3D materials
+  types/      Shared application types
+  utils/      Date, globe, and import validation helpers
+```
+
+## State And Persistence
+
+The app uses three Zustand stores:
+
+- `goalStore`: goals, categories, filters, import/export helpers
+- `settingsStore`: theme, horizon mode, curvature, grid, time simulation, camera rail
+- `uiStore`: editor selection, hover state, and transient UI toggles
+
+Goals and settings persist to browser storage with separate keys:
+
+- `goal-horizons-goals`
+- `goal-horizons-settings`
+
+Backup imports are validated before they are accepted. The expected backup shape is:
+
+```ts
+{
+  goals: Goal[];
+  categories: Category[];
+}
+```
+
+## Development Notes
+
+- `npm audit fix` has been run and the current dependency tree reports zero known vulnerabilities.
+- The production bundle currently emits Vite's large chunk warning because Three.js and React Three Fiber are bundled into the main app. Treat code splitting as a later performance pass rather than a correctness blocker.
+- Tests currently focus on utility logic and store behavior. Add component or browser-level tests when changing interactive editor workflows or 3D rendering behavior.

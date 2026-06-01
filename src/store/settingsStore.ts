@@ -27,6 +27,21 @@ interface SettingsStore extends AppSettings {
     setCameraRailPosition: (position: number) => void;
 }
 
+export function migrateSettings(persistedState: unknown): AppSettings {
+    const state = (persistedState ?? {}) as Partial<AppSettings>;
+    const horizonMode = state.horizonMode ?? 'hard';
+    return {
+        theme: state.theme ?? 'minimalist',
+        horizonMode,
+        curvature: clamp01(state.curvature ?? horizonModeToCurvature(horizonMode)),
+        gridOverlayEnabled: state.gridOverlayEnabled ?? false,
+        gridLabelDensity: clampGridLabelDensity(state.gridLabelDensity ?? 1),
+        simulatedDaysAhead: clampSimulatedDays(state.simulatedDaysAhead ?? 0),
+        controlLayout: state.controlLayout ?? 'float',
+        cameraRailPosition: clamp01(state.cameraRailPosition ?? 0.3),
+    };
+}
+
 export const useSettingsStore = create<SettingsStore>()(
     persist(
         (set) => ({
@@ -51,20 +66,7 @@ export const useSettingsStore = create<SettingsStore>()(
         {
             name: 'goal-horizons-settings',
             version: 4,
-            migrate: (persistedState) => {
-                const state = (persistedState ?? {}) as Partial<AppSettings>;
-                const horizonMode = state.horizonMode ?? 'hard';
-                return {
-                    theme: state.theme ?? 'minimalist',
-                    horizonMode,
-                    curvature: clamp01(state.curvature ?? horizonModeToCurvature(horizonMode)),
-                    gridOverlayEnabled: state.gridOverlayEnabled ?? false,
-                    gridLabelDensity: clampGridLabelDensity(state.gridLabelDensity ?? 1),
-                    simulatedDaysAhead: clampSimulatedDays(state.simulatedDaysAhead ?? 0),
-                    controlLayout: state.controlLayout ?? 'float',
-                    cameraRailPosition: clamp01(state.cameraRailPosition ?? 0.3),
-                };
-            },
+            migrate: migrateSettings,
         }
     )
 );

@@ -1,5 +1,5 @@
-import {useState, useEffect, useCallback} from "react";
-import type {Priority, RecurrenceRule, SubTask} from "../../types/goal";
+import {useState, useCallback} from "react";
+import type {Goal, Priority, RecurrenceRule, SubTask} from "../../types/goal";
 import {useGoalStore} from "../../store/goalStore";
 import {useUIStore} from "../../store/uiStore";
 import {useTheme} from "../../hooks/useTheme";
@@ -24,10 +24,10 @@ const RECURRENCE_OPTIONS: {value: RecurrenceRule; label: string}[] = [
   {value: "yearly", label: "Yearly"},
 ];
 
-const emptyGoal = {
+const createEmptyGoal = (category = "") => ({
   title: "",
   date: todayISO(),
-  category: "",
+  category,
   priority: "medium" as Priority,
   description: "",
   isRecurring: false,
@@ -39,9 +39,28 @@ const emptyGoal = {
   links: [] as string[],
   notes: "",
   timeOfDay: "",
-};
+});
 
-type FormState = typeof emptyGoal;
+type FormState = ReturnType<typeof createEmptyGoal>;
+
+function goalToFormState(goal: Goal): FormState {
+  return {
+    title: goal.title,
+    date: goal.date,
+    category: goal.category,
+    priority: goal.priority,
+    description: goal.description,
+    isRecurring: goal.isRecurring,
+    recurrenceRule: goal.recurrenceRule || "weekly",
+    recurrenceEndDate: goal.recurrenceEndDate || "",
+    subTasks: goal.subTasks,
+    progressPercent: goal.progressPercent,
+    tags: goal.tags,
+    links: goal.links,
+    notes: goal.notes,
+    timeOfDay: goal.timeOfDay || "",
+  };
+}
 
 export default function GoalForm({goalId, onSaved}: GoalFormProps) {
   const theme = useTheme();
@@ -55,39 +74,11 @@ export default function GoalForm({goalId, onSaved}: GoalFormProps) {
   const existingGoal = goalId ? goals.find((g) => g.id === goalId) : null;
   const isEditing = !!existingGoal;
 
-  const [form, setForm] = useState(emptyGoal);
+  const [form, setForm] = useState<FormState>(() => (existingGoal ? goalToFormState(existingGoal) : createEmptyGoal(categories[0]?.id || "")));
   const [tagInput, setTagInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
   const [subTaskInput, setSubTaskInput] = useState("");
   const [showDelete, setShowDelete] = useState(false);
-
-  // Load existing goal data
-  useEffect(() => {
-    if (existingGoal) {
-      setForm({
-        title: existingGoal.title,
-        date: existingGoal.date,
-        category: existingGoal.category,
-        priority: existingGoal.priority,
-        description: existingGoal.description,
-        isRecurring: existingGoal.isRecurring,
-        recurrenceRule: existingGoal.recurrenceRule || "weekly",
-        recurrenceEndDate: existingGoal.recurrenceEndDate || "",
-        subTasks: existingGoal.subTasks,
-        progressPercent: existingGoal.progressPercent,
-        tags: existingGoal.tags,
-        links: existingGoal.links,
-        notes: existingGoal.notes,
-        timeOfDay: existingGoal.timeOfDay || "",
-      });
-    } else {
-      setForm({
-        ...emptyGoal,
-        category: categories[0]?.id || "",
-      });
-    }
-    setShowDelete(false);
-  }, [existingGoal, goalId, categories]);
 
   const handleChange = useCallback(<K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({...prev, [field]: value}));

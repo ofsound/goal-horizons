@@ -155,7 +155,7 @@ export default function Globe() {
           opacity: 0.44,
         };
       });
-  }, [gridOverlayEnabled, isFullyFlat, flatDayLines, curvedDayLines, globeCenterY, gridLabelDensity]);
+  }, [gridOverlayEnabled, isFullyFlat, flatDayLines, curvedDayLines, globeCenterY, gridLabelDensity, globeRadius]);
 
   return (
     <group>
